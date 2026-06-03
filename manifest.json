@@ -1,0 +1,31 @@
+{
+  "id": "event-rsvps",
+  "name": "Event RSVPs",
+  "version": "1.0.0",
+  "description": "Create org events and collect RSVPs — who's coming, headcount for catering, send reminders to non-responders, export attendee lists.",
+  "entrypoint": "index.html",
+  "runtime": "static",
+  "category": "general",
+  "tags": ["events", "rsvp", "attendance", "everyone"],
+  "data_access": {
+    "reads": ["family.members", "family.calendar"],
+    "writes": []
+  },
+  "permissions": {
+    "default_audience": "everyone",
+    "requires_approval": false
+  },
+  "storage": "db",
+  "publishes": ["event.created", "event.cancelled"],
+  "alert_on": ["event.created"],
+  "nav": { "label": "RSVPs" },
+  "resource_limits": {
+    "max_db_bytes": 52428800
+  },
+  "icon": "🎟️",
+  "ai_access": {
+    "allowed": true,
+    "mode": "read",
+    "db_exports": ["upcoming_events", "event_rsvp_summary"]
+  }
+}

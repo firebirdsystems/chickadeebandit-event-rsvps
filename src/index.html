@@ -1,0 +1,1075 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Event RSVPs</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:           var(--hub-bg, #f9fafb);
+      --card:         var(--hub-surface, #ffffff);
+      --border:       var(--hub-border, #e5e7eb);
+      --border-mid:   var(--hub-border, #d1d5db);
+      --text:         var(--hub-text, #111827);
+      --muted:        var(--hub-text-muted, #6b7280);
+      --accent:       var(--hub-primary, #111827);
+      --accent-hover: var(--hub-primary-hover, #374151);
+      --accent-light: #f3f4f6;
+      --green:        #059669;
+      --green-light:  #d1fae5;
+      --red:          #dc2626;
+      --red-light:    #fee2e2;
+      --amber:        #d97706;
+      --amber-light:  #fef3c7;
+      --radius:       var(--hub-radius, 0.5rem);
+      --shadow:       0 1px 3px rgba(0,0,0,.07);
+      --shadow-md:    0 4px 12px rgba(0,0,0,.1);
+    }
+
+    body {
+      font-family: var(--hub-font, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      font-size: var(--hub-font-size, 15px);
+      line-height: 1.5;
+    }
+
+    .app { max-width: 640px; margin: 0 auto; padding: 16px; }
+
+    /* ── Typography ─────────────────────────────────────────── */
+    .section-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      margin-bottom: 8px;
+    }
+
+    /* ── Buttons ────────────────────────────────────────────── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: opacity .15s, background .15s;
+      text-decoration: none;
+    }
+    .btn:disabled { opacity: .45; cursor: default; }
+    .btn-primary { background: var(--accent); color: var(--hub-primary-fg, #ffffff); }
+    .btn-primary:hover:not(:disabled) { background: var(--accent-hover); }
+    .btn-ghost { background: transparent; color: var(--muted); border: 1.5px solid var(--border-mid); }
+    .btn-ghost:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+    .btn-sm { padding: 5px 12px; font-size: 0.8rem; }
+
+    /* ── Page header ────────────────────────────────────────── */
+    .page-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      gap: 10px;
+    }
+    .page-header h1 { font-size: 1.25rem; font-weight: 700; }
+
+    /* ── Tabs ───────────────────────────────────────────────── */
+    .tabs {
+      display: flex;
+      gap: 4px;
+      background: var(--border);
+      border-radius: 10px;
+      padding: 3px;
+      margin-bottom: 16px;
+    }
+    .tab {
+      flex: 1;
+      padding: 7px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--muted);
+      background: transparent;
+      transition: all .15s;
+    }
+    .tab.active { background: white; color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,.1); }
+
+    /* ── Event cards ────────────────────────────────────────── */
+    .event-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      margin-bottom: 10px;
+      cursor: pointer;
+      transition: box-shadow .15s, border-color .15s;
+    }
+    .event-card:hover { box-shadow: var(--shadow-md); border-color: var(--border-mid); }
+    .event-card.cancelled { opacity: .6; }
+    .event-card-inner { padding: 14px 16px; }
+    .event-card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 6px;
+    }
+    .event-title { font-weight: 600; font-size: 1rem; line-height: 1.4; }
+    .event-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      margin-top: 3px;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    /* ── RSVP chips on card ─────────────────────────────────── */
+    .rsvp-chips { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 8px; }
+    .chip {
+      display: inline-flex; align-items: center;
+      font-size: 0.71rem; font-weight: 600;
+      padding: 2px 8px; border-radius: 20px;
+    }
+    .chip-yes   { background: var(--green-light); color: var(--green); }
+    .chip-maybe { background: var(--amber-light); color: var(--amber); }
+    .chip-no    { background: var(--red-light);   color: var(--red); }
+    .chip-none  { background: #f1f5f9; color: var(--muted); }
+
+    /* ── Badges ─────────────────────────────────────────────── */
+    .badge {
+      display: inline-flex; align-items: center;
+      font-size: 0.71rem; font-weight: 600;
+      padding: 2px 8px; border-radius: 20px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .badge-yes       { background: var(--green-light); color: var(--green); }
+    .badge-maybe     { background: var(--amber-light); color: var(--amber); }
+    .badge-no        { background: var(--red-light);   color: var(--red); }
+    .badge-none      { background: #f1f5f9; color: var(--muted); }
+    .badge-cancelled { background: #f1f5f9; color: var(--muted); }
+
+    .card-footer-notes { display: flex; flex-direction: column; gap: 2px; margin-top: 6px; }
+    .headcount-note { font-size: 0.75rem; color: var(--muted); }
+    .deadline-note  { font-size: 0.75rem; color: var(--amber); }
+    .deadline-note.passed { color: var(--muted); }
+
+    /* ── Back button ────────────────────────────────────────── */
+    .back-btn {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 0.82rem; color: var(--accent); cursor: pointer;
+      background: none; border: none; padding: 0; margin-bottom: 12px;
+      font-weight: 600;
+    }
+    .back-btn:hover { opacity: .75; }
+
+    /* ── Event detail header ────────────────────────────────── */
+    .event-detail-header {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 12px;
+      box-shadow: var(--shadow);
+    }
+    .event-detail-title {
+      font-size: 1.2rem; font-weight: 700; line-height: 1.4; margin-bottom: 8px;
+    }
+    .event-detail-meta {
+      display: flex; flex-direction: column; gap: 4px;
+      font-size: 0.82rem; color: var(--muted);
+    }
+    .event-description {
+      margin-top: 10px; padding-top: 10px;
+      border-top: 1px solid var(--border);
+      font-size: 0.88rem; color: var(--text); line-height: 1.55;
+    }
+    .cancelled-banner {
+      background: #f1f5f9; border: 1px dashed #cbd5e1; border-radius: 8px;
+      padding: 8px 12px; font-size: 0.82rem; color: var(--muted);
+      margin-bottom: 10px; text-align: center;
+    }
+
+    /* ── RSVP section ───────────────────────────────────────── */
+    .rsvp-section {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      margin-bottom: 12px;
+      box-shadow: var(--shadow);
+    }
+    .rsvp-buttons { display: flex; gap: 8px; }
+    .rsvp-btn {
+      flex: 1; padding: 10px 8px;
+      border-radius: 8px;
+      border: 1.5px solid var(--border-mid);
+      cursor: pointer;
+      font-size: 0.85rem; font-weight: 600;
+      background: var(--card); color: var(--muted);
+      transition: all .15s; text-align: center;
+    }
+    .rsvp-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .rsvp-btn.active-yes   { background: var(--green-light); border-color: var(--green);  color: var(--green); }
+    .rsvp-btn.active-maybe { background: var(--amber-light); border-color: var(--amber);  color: var(--amber); }
+    .rsvp-btn.active-no    { background: var(--red-light);   border-color: var(--red);    color: var(--red); }
+    .rsvp-extra { margin-top: 12px; }
+
+    /* ── Breakdown ──────────────────────────────────────────── */
+    .breakdown-section {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      margin-bottom: 12px;
+      box-shadow: var(--shadow);
+    }
+    .breakdown-group { margin-bottom: 10px; }
+    .breakdown-group:last-child { margin-bottom: 0; }
+    .breakdown-label {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 0.8rem; font-weight: 600; color: var(--muted);
+      margin-bottom: 6px;
+    }
+    .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .dot-yes   { background: var(--green); }
+    .dot-maybe { background: var(--amber); }
+    .dot-no    { background: var(--red); }
+    .dot-none  { background: #9ca3af; }
+    .chip-row { display: flex; flex-wrap: wrap; gap: 4px; }
+    .attendee-chip {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 0.75rem; color: var(--text);
+      background: var(--accent-light); border-radius: 20px;
+      padding: 2px 8px 2px 3px;
+    }
+    .attendee-chip.muted { background: #f1f5f9; color: var(--muted); }
+
+    /* ── Avatar ─────────────────────────────────────────────── */
+    .avatar-sm {
+      width: 22px; height: 22px; border-radius: 50%;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 0.65rem; font-weight: 800; color: white; flex-shrink: 0;
+    }
+
+    /* ── Actions bar ────────────────────────────────────────── */
+    .actions-bar {
+      display: flex; gap: 8px; flex-wrap: wrap;
+      margin-bottom: 4px;
+    }
+
+    /* ── Forms ──────────────────────────────────────────────── */
+    .form-group { margin-bottom: 14px; }
+    .form-group label {
+      display: block; font-size: 0.82rem; font-weight: 600;
+      color: var(--muted); margin-bottom: 5px;
+    }
+    .form-group input[type="text"],
+    .form-group input[type="number"],
+    .form-group input[type="datetime-local"],
+    .form-group textarea {
+      width: 100%;
+      border: 1.5px solid var(--border-mid);
+      border-radius: 8px;
+      padding: 9px 12px;
+      font-size: 0.92rem;
+      outline: none;
+      transition: border-color .15s;
+      font-family: inherit;
+      background: var(--card);
+      color: var(--text);
+    }
+    .form-group input:focus,
+    .form-group textarea:focus { border-color: var(--accent); }
+    .form-group textarea { resize: vertical; min-height: 70px; }
+    .form-row { display: flex; gap: 12px; }
+    .form-row .form-group { flex: 1; min-width: 0; }
+
+    /* ── Modal ──────────────────────────────────────────────── */
+    .modal-backdrop {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.45);
+      display: flex; align-items: flex-end; justify-content: center;
+      z-index: 100;
+    }
+    @media (min-width: 520px) {
+      .modal-backdrop { align-items: center; padding: 20px; }
+    }
+    .modal {
+      background: var(--card);
+      border-radius: var(--radius) var(--radius) 0 0;
+      width: 100%; max-width: 540px;
+      max-height: 92vh; overflow-y: auto;
+      padding: 24px;
+    }
+    @media (min-width: 520px) {
+      .modal { border-radius: var(--radius); }
+    }
+    .modal h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 18px; }
+    .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+    .modal-actions .btn { flex: 1; justify-content: center; }
+
+    /* ── Info / error banners ───────────────────────────────── */
+    .info-banner {
+      background: var(--accent-light);
+      border: 1px solid var(--border-mid);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 0.85rem; color: var(--muted);
+      margin-bottom: 12px;
+    }
+    .error-msg {
+      background: var(--red-light); color: var(--red);
+      border-radius: 8px; padding: 10px 14px;
+      font-size: 0.85rem; margin-bottom: 12px;
+    }
+
+    /* ── Empty / Loading ────────────────────────────────────── */
+    .empty { text-align: center; padding: 48px 16px; color: var(--muted); }
+    .empty-icon { font-size: 2.5rem; margin-bottom: 10px; }
+    .loading { text-align: center; padding: 48px; color: var(--muted); }
+  </style>
+  <base href="/run/event-rsvps/">
+</head>
+<body>
+<div class="app">
+  <div id="root"><div class="loading">Loading…</div></div>
+</div>
+
+<script type="module">
+import { memberColor, initial, esc, hubConfirm } from "/hub-sdk.js";
+import {
+  canCreateEvent, canManageEvent,
+  isUpcoming, deadlinePassed,
+  myRsvp, rsvpCounts, totalAttendees,
+} from "./logic.js";
+
+// ─── Runtime globals ──────────────────────────────────────────────────────────
+const CONTEXT    = window.__CONTEXT_URL   ?? "";
+const DB_URL     = window.__DB_URL        ?? "";
+const APP_ID     = window.__APP_ID        ?? "event-rsvps";
+const HUB_MEMBER = window.__CURRENT_MEMBER ?? null;
+const EVENTS_URL = window.__EVENTS_URL    ?? "/api/events";
+
+// ─── State ────────────────────────────────────────────────────────────────────
+let members        = [];
+let events         = [];
+let rsvps          = [];
+let ME             = null;  // resolved after loadMembers
+let currentEventId = null;
+let listTab        = "upcoming";
+let _selectedStatus = ""; // tracks which RSVP button is active in detail view
+
+// ─── DB helper ────────────────────────────────────────────────────────────────
+async function db(sql, params = []) {
+  if (!DB_URL) return { rows: [] };
+  const res = await fetch(DB_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ sql, params }),
+  });
+  return res.json();
+}
+
+// ─── Member helpers ───────────────────────────────────────────────────────────
+function memberById(id) { return members.find(m => m.id === id); }
+
+// ─── Data loading ─────────────────────────────────────────────────────────────
+async function loadMembers() {
+  if (!CONTEXT) {
+    members = [
+      { id: "demo-1", name: "Alex",    role: "adult" },
+      { id: "demo-2", name: "Jordan",  role: "adult" },
+      { id: "demo-3", name: "Casey",   role: "child" },
+      { id: "demo-4", name: "Riley",   role: "child" },
+      { id: "demo-5", name: "Morgan",  role: "adult" },
+    ];
+    return;
+  }
+  try {
+    const res = await fetch(`${CONTEXT}?keys=family.members`);
+    members = ((await res.json())["family.members"]) ?? [];
+  } catch { members = []; }
+}
+
+async function loadEvents() {
+  if (!DB_URL) return;
+  const { rows } = await db(
+    `SELECT * FROM events WHERE household_id = current_setting('app.household_id', true)::uuid ORDER BY event_date ASC`
+  );
+  events = rows;
+}
+
+async function loadRsvps() {
+  if (!DB_URL) return;
+  const { rows } = await db(
+    `SELECT * FROM rsvps WHERE household_id = current_setting('app.household_id', true)::uuid`
+  );
+  rsvps = rows;
+}
+
+// ─── Actions ──────────────────────────────────────────────────────────────────
+async function createEvent(data) {
+  const id  = crypto.randomUUID();
+  const now = new Date().toISOString();
+  const newEvent = {
+    id, title: data.title, description: data.description, location: data.location,
+    event_date: data.event_date, rsvp_deadline: data.rsvp_deadline || null,
+    headcount: data.headcount || null, created_by: ME?.id ?? "system",
+    created_at: now, cancelled: 0,
+  };
+  events.push(newEvent);
+
+  await db(
+    `INSERT INTO events (id, title, description, location, event_date, rsvp_deadline, headcount, created_by, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [id, data.title, data.description, data.location, data.event_date,
+     data.rsvp_deadline || null, data.headcount || null, ME?.id ?? "system", now]
+  );
+
+  await Promise.all([
+    logActivity(id, "event_created", data.title),
+    postHubActivity("event_created", `${ME?.name ?? "Someone"} created a new event: "${data.title}"`, id),
+    sendNotification(`New event: ${data.title}`, `${ME?.name ?? "Someone"} added a new event — RSVP now!`),
+    publishEvent("event.created", id, data.title),
+  ]);
+
+  closeModal();
+  currentEventId = id;
+  _selectedStatus = "";
+  render();
+}
+
+async function updateEvent(id, data) {
+  const ev = events.find(e => e.id === id);
+  if (ev) {
+    ev.title         = data.title;
+    ev.description   = data.description;
+    ev.location      = data.location;
+    ev.event_date    = data.event_date;
+    ev.rsvp_deadline = data.rsvp_deadline || null;
+    ev.headcount     = data.headcount || null;
+  }
+
+  await db(
+    `UPDATE events SET title=?, description=?, location=?, event_date=?, rsvp_deadline=?, headcount=? WHERE id=?`,
+    [data.title, data.description, data.location, data.event_date,
+     data.rsvp_deadline || null, data.headcount || null, id]
+  );
+
+  closeModal();
+  render();
+}
+
+async function cancelEvent(id) {
+  const ev = events.find(e => e.id === id);
+  if (!await hubConfirm({
+    message: `Cancel "${ev?.title ?? "this event"}"?`,
+    description: "Members will not be automatically notified. Consider sending reminders first.",
+    confirmLabel: "Cancel event",
+    destructive: true,
+  })) return;
+
+  if (ev) ev.cancelled = 1;
+  await db(`UPDATE events SET cancelled=1 WHERE id=?`, [id]);
+
+  await Promise.all([
+    logActivity(id, "event_cancelled", ev?.title ?? ""),
+    postHubActivity("event_cancelled", `${ME?.name ?? "Someone"} cancelled: "${ev?.title}"`, id),
+    publishEvent("event.cancelled", id, ev?.title ?? ""),
+  ]);
+
+  currentEventId = null;
+  render();
+}
+
+async function saveRsvp(eventId, status, guestCount, note) {
+  const memberId = ME?.id ?? "demo";
+  const id  = crypto.randomUUID();
+  const now = new Date().toISOString();
+
+  const rsvp = { id, event_id: eventId, member_id: memberId, status, guest_count: guestCount, note, updated_at: now };
+  const idx  = rsvps.findIndex(r => r.event_id === eventId && r.member_id === memberId);
+  if (idx >= 0) rsvps[idx] = rsvp;
+  else rsvps.push(rsvp);
+
+  _selectedStatus = status;
+  render();
+
+  db(
+    `INSERT INTO rsvps (id, event_id, member_id, status, guest_count, note, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?)
+     ON CONFLICT(event_id, member_id) DO UPDATE SET
+       status=excluded.status,
+       guest_count=excluded.guest_count,
+       note=excluded.note,
+       updated_at=excluded.updated_at`,
+    [id, eventId, memberId, status, guestCount, note, now]
+  );
+}
+
+function sendReminders(eventId) {
+  const ev     = events.find(e => e.id === eventId);
+  const counts = rsvpCounts(eventId, rsvps, members);
+  if (!ev || counts.noResponse.length === 0) {
+    alert("Everyone has already responded!");
+    return;
+  }
+  const names = counts.noResponse.map(m => m.name).join(", ");
+  sendNotification(
+    `RSVP needed: ${ev.title}`,
+    `Please respond: ${names} — haven't RSVPed for "${ev.title}" on ${fmtDate(ev.event_date)}.`
+  );
+}
+
+function exportCsv(eventId) {
+  const ev = events.find(e => e.id === eventId);
+  if (!ev) return;
+  const eventRsvps = rsvps.filter(r => r.event_id === eventId);
+  const rows = [["Name", "Status", "Guests", "Note"]];
+  for (const m of members) {
+    const r = eventRsvps.find(r => r.member_id === m.id);
+    rows.push([
+      m.name,
+      r ? r.status : "no response",
+      r ? String(r.guest_count) : "0",
+      r ? (r.note ?? "") : "",
+    ]);
+  }
+  const csv  = rows.map(r => r.map(c => `"${c.replace(/"/g, '""')}"`).join(",")).join("\n");
+  const blob = new Blob([csv], { type: "text/csv" });
+  const a    = document.createElement("a");
+  a.href     = URL.createObjectURL(blob);
+  a.download = `${ev.title.replace(/[^a-z0-9]/gi, "_")}_rsvps.csv`;
+  a.click();
+}
+
+// ─── Side-effect helpers ──────────────────────────────────────────────────────
+async function logActivity(recordId, action, detail = "") {
+  const id = crypto.randomUUID();
+  await db(
+    `INSERT INTO activity (id, record_id, actor_id, action, detail, created_at) VALUES (?, ?, ?, ?, ?, ?)`,
+    [id, recordId, ME?.id ?? "system", action, detail, new Date().toISOString()]
+  );
+}
+
+function postHubActivity(type, description, eventId) {
+  if (!DB_URL) return Promise.resolve();
+  return fetch("/api/activity", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      type,
+      actor: ME?.name ?? "System",
+      description,
+      metadata: { deepLink: { appId: APP_ID, params: { eventId } } },
+    }),
+  }).catch(() => {});
+}
+
+function sendNotification(title, body) {
+  if (!DB_URL) return;
+  fetch("/api/notifications/send", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ title, body, url: `/run/${APP_ID}` }),
+  }).catch(() => {});
+}
+
+function publishEvent(type, eventId, title) {
+  if (!DB_URL) return;
+  fetch(EVENTS_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      source_app_id: APP_ID,
+      type,
+      subject_id: eventId,
+      payload: { title },
+    }),
+  }).catch(() => {});
+}
+
+// ─── Date formatting ──────────────────────────────────────────────────────────
+function fmtDate(iso) {
+  if (!iso) return "";
+  return new Date(iso).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" });
+}
+
+function fmtDateTime(iso) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  return d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" }) +
+    " · " + d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+}
+
+function fmtDateShort(iso) {
+  if (!iso) return "";
+  const d   = new Date(iso);
+  const now = new Date();
+  const opts = { month: "short", day: "numeric" };
+  if (d.getFullYear() !== now.getFullYear()) opts.year = "numeric";
+  return d.toLocaleDateString("en-US", opts);
+}
+
+function toLocalInput(iso) {
+  if (!iso) return "";
+  const d   = new Date(iso);
+  const pad = n => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+// ─── Modal ────────────────────────────────────────────────────────────────────
+let modalEl = null;
+function openModal(html) {
+  closeModal();
+  modalEl = document.createElement("div");
+  modalEl.className = "modal-backdrop";
+  modalEl.innerHTML = `<div class="modal">${html}</div>`;
+  modalEl.addEventListener("click", e => { if (e.target === modalEl) closeModal(); });
+  document.body.appendChild(modalEl);
+}
+function closeModal() { modalEl?.remove(); modalEl = null; }
+window.closeModal = closeModal;
+
+function openCreateEventModal(existingId = null) {
+  const ev = existingId ? events.find(e => e.id === existingId) : null;
+  openModal(`
+    <h3>${ev ? "Edit Event" : "New Event"}</h3>
+
+    <div class="form-group">
+      <label>Title *</label>
+      <input type="text" id="f-title" value="${ev ? esc(ev.title) : ""}"
+        placeholder="Spring Formal, Chapter Meeting…" />
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Date &amp; Time *</label>
+        <input type="datetime-local" id="f-date" value="${ev ? toLocalInput(ev.event_date) : ""}" />
+      </div>
+      <div class="form-group">
+        <label>RSVP Deadline</label>
+        <input type="datetime-local" id="f-deadline" value="${ev ? toLocalInput(ev.rsvp_deadline) : ""}" />
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Location</label>
+      <input type="text" id="f-location" value="${ev ? esc(ev.location) : ""}"
+        placeholder="Main hall, 123 Main St…" />
+    </div>
+
+    <div class="form-group">
+      <label>Description</label>
+      <textarea id="f-desc" rows="3" placeholder="Details about the event…">${ev ? esc(ev.description) : ""}</textarea>
+    </div>
+
+    <div class="form-group">
+      <label>Headcount needed <span style="font-weight:400;color:var(--muted)">(for catering/venue)</span></label>
+      <input type="number" id="f-headcount" min="1" value="${ev && ev.headcount ? ev.headcount : ""}"
+        placeholder="e.g. 50" />
+    </div>
+
+    <div id="event-error" class="error-msg" style="display:none"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="submitEvent('${existingId ?? ""}')">
+        ${ev ? "Save Changes" : "Create Event"}
+      </button>
+    </div>
+  `);
+  setTimeout(() => document.getElementById("f-title")?.focus(), 50);
+}
+
+window.submitEvent = async function(existingId) {
+  const title     = document.getElementById("f-title").value.trim();
+  const dateVal   = document.getElementById("f-date").value;
+  const deadline  = document.getElementById("f-deadline").value;
+  const location  = document.getElementById("f-location").value.trim();
+  const desc      = document.getElementById("f-desc").value.trim();
+  const headcount = parseInt(document.getElementById("f-headcount").value) || null;
+  const errEl     = document.getElementById("event-error");
+
+  if (!title)   { showErr(errEl, "Title is required.");         return; }
+  if (!dateVal) { showErr(errEl, "Date & time is required.");   return; }
+  errEl.style.display = "none";
+
+  const btn = modalEl?.querySelector(".btn-primary");
+  if (btn) { btn.disabled = true; btn.textContent = "Saving…"; }
+
+  try {
+    const data = {
+      title,
+      description:  desc,
+      location,
+      event_date:   new Date(dateVal).toISOString(),
+      rsvp_deadline: deadline ? new Date(deadline).toISOString() : null,
+      headcount,
+    };
+    if (existingId) await updateEvent(existingId, data);
+    else            await createEvent(data);
+  } catch {
+    if (btn) { btn.disabled = false; btn.textContent = existingId ? "Save Changes" : "Create Event"; }
+  }
+};
+
+function showErr(el, msg) { el.textContent = msg; el.style.display = "block"; }
+
+// ─── Rendering helpers ────────────────────────────────────────────────────────
+function renderRsvpChips(eventId) {
+  const c = rsvpCounts(eventId, rsvps, members);
+  const parts = [];
+  if (c.yes.length)        parts.push(`<span class="chip chip-yes">✓ ${c.yes.length} going</span>`);
+  if (c.maybe.length)      parts.push(`<span class="chip chip-maybe">? ${c.maybe.length} maybe</span>`);
+  if (c.no.length)         parts.push(`<span class="chip chip-no">✗ ${c.no.length} not going</span>`);
+  if (c.noResponse.length) parts.push(`<span class="chip chip-none">— ${c.noResponse.length} no response</span>`);
+  return parts.length ? `<div class="rsvp-chips">${parts.join("")}</div>` : "";
+}
+
+function myRsvpBadge(eventId) {
+  const r = myRsvp(eventId, rsvps, ME?.id ?? "");
+  if (!r)                  return `<span class="badge badge-none">No response</span>`;
+  if (r.status === "yes")  return `<span class="badge badge-yes">Going</span>`;
+  if (r.status === "maybe")return `<span class="badge badge-maybe">Maybe</span>`;
+  return `<span class="badge badge-no">Not going</span>`;
+}
+
+// ─── List view ────────────────────────────────────────────────────────────────
+function renderList() {
+  const upcoming = events.filter(e => isUpcoming(e));
+  const past     = events.filter(e => !isUpcoming(e));
+  const showing  = listTab === "upcoming" ? upcoming : past;
+  const canCreate = canCreateEvent(ME);
+
+  document.getElementById("root").innerHTML = `
+    <div class="page-header">
+      <h1>Event RSVPs</h1>
+      ${canCreate ? `<button class="btn btn-primary btn-sm" onclick="openCreateEventModal()">+ New Event</button>` : ""}
+    </div>
+
+    <div class="tabs">
+      <button class="tab ${listTab === "upcoming" ? "active" : ""}" onclick="setTab('upcoming')">
+        Upcoming${upcoming.length > 0 ? ` (${upcoming.length})` : ""}
+      </button>
+      <button class="tab ${listTab === "past" ? "active" : ""}" onclick="setTab('past')">
+        Past${past.length > 0 ? ` (${past.length})` : ""}
+      </button>
+    </div>
+
+    ${showing.length === 0
+      ? `<div class="empty">
+           <div class="empty-icon">${listTab === "upcoming" ? "🎟️" : "📋"}</div>
+           <p>${listTab === "upcoming"
+             ? "No upcoming events." + (canCreate ? " Create one to get started!" : "")
+             : "No past events."}</p>
+         </div>`
+      : showing.map(renderEventCard).join("")
+    }
+  `;
+}
+
+function renderEventCard(ev) {
+  const deadlinePast = deadlinePassed(ev);
+  return `
+    <div class="event-card ${ev.cancelled ? "cancelled" : ""}" onclick="openEvent('${ev.id}')">
+      <div class="event-card-inner">
+        <div class="event-card-top">
+          <div>
+            <div class="event-title">${esc(ev.title)}</div>
+            <div class="event-meta">
+              <span>📅 ${fmtDateTime(ev.event_date)}</span>
+              ${ev.location ? `<span>📍 ${esc(ev.location)}</span>` : ""}
+            </div>
+          </div>
+          ${ev.cancelled
+            ? `<span class="badge badge-cancelled">Cancelled</span>`
+            : myRsvpBadge(ev.id)
+          }
+        </div>
+        ${ev.cancelled ? "" : renderRsvpChips(ev.id)}
+        <div class="card-footer-notes">
+          ${ev.headcount ? `<span class="headcount-note">Needs ${ev.headcount} attendees</span>` : ""}
+          ${!ev.cancelled && ev.rsvp_deadline
+            ? `<span class="deadline-note ${deadlinePast ? "passed" : ""}">
+                RSVP ${deadlinePast ? "closed" : "by"} ${fmtDateTime(ev.rsvp_deadline)}
+               </span>`
+            : ""}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ─── Detail view ──────────────────────────────────────────────────────────────
+function renderDetail(ev) {
+  const canManage    = canManageEvent(ev, ME);
+  const cancelled    = !!ev.cancelled;
+  const deadlinePast = deadlinePassed(ev);
+  const canRsvp      = !cancelled && !deadlinePast && ME;
+  const counts       = rsvpCounts(ev.id, rsvps, members);
+  const myR          = myRsvp(ev.id, rsvps, ME?.id ?? "");
+  const creator      = memberById(ev.created_by);
+
+  // ── RSVP section ──
+  const currentStatus = _selectedStatus || myR?.status || "";
+  const currentGuests = myR?.guest_count ?? 0;
+  const currentNote   = myR?.note ?? "";
+
+  let rsvpSection = "";
+  if (canRsvp) {
+    rsvpSection = `
+      <div class="rsvp-section">
+        <div class="section-label" style="margin-bottom:10px">Your RSVP</div>
+        <div class="rsvp-buttons">
+          <button class="rsvp-btn ${currentStatus === "yes"   ? "active-yes"   : ""}" onclick="selectRsvp('yes')">✓ Going</button>
+          <button class="rsvp-btn ${currentStatus === "maybe" ? "active-maybe" : ""}" onclick="selectRsvp('maybe')">? Maybe</button>
+          <button class="rsvp-btn ${currentStatus === "no"    ? "active-no"    : ""}" onclick="selectRsvp('no')">✗ Not Going</button>
+        </div>
+        <div class="rsvp-extra" id="rsvp-extra" style="${currentStatus ? "" : "display:none"}">
+          <div class="form-row" style="margin-top:12px">
+            <div class="form-group" style="flex:0 0 110px">
+              <label>Guests</label>
+              <input type="number" id="rsvp-guests" min="0" max="20" value="${currentGuests}" />
+            </div>
+            <div class="form-group" style="flex:1">
+              <label>Note <span style="font-weight:400;color:var(--muted)">(optional)</span></label>
+              <input type="text" id="rsvp-note" value="${esc(currentNote)}"
+                placeholder="Dietary needs, arriving late…" />
+            </div>
+          </div>
+          <button class="btn btn-primary btn-sm" id="rsvp-save-btn" onclick="submitRsvp('${ev.id}')">
+            ${myR ? "Update RSVP" : "Save RSVP"}
+          </button>
+          ${myR ? `<span style="font-size:0.76rem;color:var(--muted);margin-left:10px">Updated ${fmtDateShort(myR.updated_at)}</span>` : ""}
+        </div>
+      </div>
+    `;
+  } else if (cancelled) {
+    rsvpSection = `<div class="info-banner">This event was cancelled.</div>`;
+  } else if (deadlinePast) {
+    rsvpSection = `<div class="info-banner">The RSVP deadline has passed.</div>`;
+  } else if (!ME) {
+    rsvpSection = `<div class="info-banner">Sign in to RSVP.</div>`;
+  }
+
+  // ── Attendee chips ──
+  function memberChips(rsvpList) {
+    return rsvpList.map(r => {
+      const m = memberById(r.member_id);
+      if (!m) return "";
+      const guests = r.guest_count > 0 ? ` +${r.guest_count}` : "";
+      return `<span class="attendee-chip">
+        <span class="avatar-sm" style="background:${memberColor(m.id)}">${initial(m.name)}</span>
+        ${esc(m.name)}${guests}
+      </span>`;
+    }).join("");
+  }
+
+  function noResponseChips(memberList) {
+    return memberList.map(m => `
+      <span class="attendee-chip muted">
+        <span class="avatar-sm" style="background:#9ca3af">${initial(m.name)}</span>
+        ${esc(m.name)}
+      </span>
+    `).join("");
+  }
+
+  const goingLabel = counts.yes.length > 0
+    ? `Going (${totalAttendees(ev.id, rsvps)} incl. guests)`
+    : "Going";
+
+  const attendeesSection = `
+    <div class="breakdown-section">
+      <div class="section-label">Attendance</div>
+      ${counts.yes.length > 0 ? `
+        <div class="breakdown-group">
+          <div class="breakdown-label"><span class="dot dot-yes"></span>${goingLabel}</div>
+          <div class="chip-row">${memberChips(counts.yes)}</div>
+        </div>
+      ` : ""}
+      ${counts.maybe.length > 0 ? `
+        <div class="breakdown-group">
+          <div class="breakdown-label"><span class="dot dot-maybe"></span>Maybe (${counts.maybe.length})</div>
+          <div class="chip-row">${memberChips(counts.maybe)}</div>
+        </div>
+      ` : ""}
+      ${counts.no.length > 0 ? `
+        <div class="breakdown-group">
+          <div class="breakdown-label"><span class="dot dot-no"></span>Not going (${counts.no.length})</div>
+          <div class="chip-row">${memberChips(counts.no)}</div>
+        </div>
+      ` : ""}
+      ${counts.noResponse.length > 0 ? `
+        <div class="breakdown-group">
+          <div class="breakdown-label"><span class="dot dot-none"></span>No response (${counts.noResponse.length})</div>
+          <div class="chip-row">${noResponseChips(counts.noResponse)}</div>
+        </div>
+      ` : `<p style="font-size:0.85rem;color:var(--muted)">Everyone has responded.</p>`}
+    </div>
+  `;
+
+  const actionsBar = canManage && !cancelled ? `
+    <div class="actions-bar">
+      <button class="btn btn-ghost btn-sm" onclick="openCreateEventModal('${ev.id}')">✏️ Edit</button>
+      <button class="btn btn-ghost btn-sm" onclick="doSendReminders('${ev.id}')">🔔 Send Reminders</button>
+      <button class="btn btn-ghost btn-sm" onclick="doExport('${ev.id}')">⬇️ Export CSV</button>
+      <button class="btn btn-ghost btn-sm" style="color:var(--red);border-color:var(--red);opacity:.8"
+        onclick="doCancelEvent('${ev.id}')">Cancel Event</button>
+    </div>
+  ` : "";
+
+  document.getElementById("root").innerHTML = `
+    <button class="back-btn" onclick="backToList()">← All Events</button>
+
+    <div class="event-detail-header">
+      ${cancelled ? `<div class="cancelled-banner">This event was cancelled.</div>` : ""}
+      <div class="event-detail-title">${esc(ev.title)}</div>
+      <div class="event-detail-meta">
+        <span>📅 ${fmtDateTime(ev.event_date)}</span>
+        ${ev.location ? `<span>📍 ${esc(ev.location)}</span>` : ""}
+        ${ev.rsvp_deadline ? `<span class="deadline-note ${deadlinePast ? "passed" : ""}">
+          RSVP ${deadlinePast ? "closed" : "deadline"}: ${fmtDateTime(ev.rsvp_deadline)}
+        </span>` : ""}
+        ${ev.headcount ? `<span>Headcount needed: ${ev.headcount}</span>` : ""}
+        ${creator ? `<span style="font-size:0.78rem">Created by ${esc(creator.name)}</span>` : ""}
+      </div>
+      ${ev.description ? `<div class="event-description">${esc(ev.description)}</div>` : ""}
+    </div>
+
+    ${rsvpSection}
+    ${attendeesSection}
+    ${actionsBar}
+
+    <div style="text-align:center;margin-top:16px">
+      <button class="btn btn-ghost btn-sm" onclick="backToList()">← Back to events</button>
+    </div>
+  `;
+}
+
+// ─── RSVP interaction ─────────────────────────────────────────────────────────
+window.selectRsvp = function(status) {
+  _selectedStatus = status;
+  document.querySelectorAll(".rsvp-btn").forEach(btn => {
+    btn.classList.remove("active-yes", "active-maybe", "active-no");
+  });
+  const cls  = { yes: "active-yes", maybe: "active-maybe", no: "active-no" }[status];
+  const idx  = { yes: 0, maybe: 1, no: 2 }[status];
+  const btns = document.querySelectorAll(".rsvp-btn");
+  if (btns[idx]) btns[idx].classList.add(cls);
+  const extra = document.getElementById("rsvp-extra");
+  if (extra) extra.style.display = "";
+};
+
+window.submitRsvp = function(eventId) {
+  if (!_selectedStatus) return;
+  const guestCount = parseInt(document.getElementById("rsvp-guests")?.value) || 0;
+  const note       = document.getElementById("rsvp-note")?.value.trim() ?? "";
+  saveRsvp(eventId, _selectedStatus, guestCount, note);
+};
+
+// ─── Navigation ───────────────────────────────────────────────────────────────
+window.openEvent = function(id) {
+  _selectedStatus = myRsvp(id, rsvps, ME?.id ?? "")?.status ?? "";
+  currentEventId  = id;
+  render();
+};
+window.backToList       = function()  { currentEventId = null; render(); };
+window.setTab           = function(t) { listTab = t; render(); };
+window.openCreateEventModal = openCreateEventModal;
+window.doSendReminders  = function(id) { sendReminders(id); };
+window.doExport         = function(id) { exportCsv(id); };
+window.doCancelEvent    = function(id) { cancelEvent(id); };
+
+// ─── Render ───────────────────────────────────────────────────────────────────
+function render() {
+  if (currentEventId) {
+    const ev = events.find(e => e.id === currentEventId);
+    if (ev) { renderDetail(ev); return; }
+    currentEventId = null;
+  }
+  renderList();
+}
+
+// ─── Deep linking ─────────────────────────────────────────────────────────────
+function handleDeepLink() {
+  const eventId = new URLSearchParams(window.location.search).get("eventId");
+  if (eventId) openEvent(eventId);
+}
+
+// ─── Demo data ────────────────────────────────────────────────────────────────
+function loadDemoData() {
+  const now  = new Date();
+  const f1   = new Date(now.getTime() +  7 * 86400000).toISOString();
+  const f2   = new Date(now.getTime() + 21 * 86400000).toISOString();
+  const dl   = new Date(now.getTime() +  4 * 86400000).toISOString();
+  const past = new Date(now.getTime() -  7 * 86400000).toISOString();
+
+  events = [
+    {
+      id: "demo-e1", title: "Spring Formal",
+      description: "Annual formal dinner dance. Business formal attire required.",
+      location: "Grand Ballroom, 200 Main St", event_date: f1,
+      rsvp_deadline: dl, headcount: 80,
+      created_by: "demo-1", created_at: now.toISOString(), cancelled: 0,
+    },
+    {
+      id: "demo-e2", title: "Chapter Meeting",
+      description: "Monthly all-member meeting. Attendance mandatory.",
+      location: "Chapter House", event_date: f2,
+      rsvp_deadline: null, headcount: null,
+      created_by: "demo-2", created_at: now.toISOString(), cancelled: 0,
+    },
+    {
+      id: "demo-e3", title: "Volunteer Day",
+      description: "Community cleanup at City Park.",
+      location: "City Park", event_date: past,
+      rsvp_deadline: null, headcount: 20,
+      created_by: "demo-1", created_at: now.toISOString(), cancelled: 0,
+    },
+  ];
+
+  rsvps = [
+    { id: "dr1", event_id: "demo-e1", member_id: "demo-1", status: "yes",   guest_count: 1, note: "Bringing my partner",  updated_at: now.toISOString() },
+    { id: "dr2", event_id: "demo-e1", member_id: "demo-2", status: "maybe", guest_count: 0, note: "",                     updated_at: now.toISOString() },
+    { id: "dr3", event_id: "demo-e1", member_id: "demo-5", status: "yes",   guest_count: 0, note: "",                     updated_at: now.toISOString() },
+    { id: "dr4", event_id: "demo-e3", member_id: "demo-1", status: "yes",   guest_count: 0, note: "",                     updated_at: now.toISOString() },
+    { id: "dr5", event_id: "demo-e3", member_id: "demo-2", status: "yes",   guest_count: 0, note: "",                     updated_at: now.toISOString() },
+    { id: "dr6", event_id: "demo-e3", member_id: "demo-3", status: "no",    guest_count: 0, note: "Prior commitment",     updated_at: now.toISOString() },
+    { id: "dr7", event_id: "demo-e3", member_id: "demo-4", status: "yes",   guest_count: 0, note: "",                     updated_at: now.toISOString() },
+    { id: "dr8", event_id: "demo-e3", member_id: "demo-5", status: "yes",   guest_count: 0, note: "",                     updated_at: now.toISOString() },
+  ];
+}
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+(async () => {
+  await loadMembers();
+
+  if (HUB_MEMBER) {
+    ME = members.find(m => m.id === HUB_MEMBER.id) ?? HUB_MEMBER;
+  } else if (!DB_URL) {
+    ME = members.find(m => m.role === "adult") ?? members[0] ?? null;
+  }
+
+  if (!DB_URL) {
+    loadDemoData();
+  } else {
+    await Promise.all([loadEvents(), loadRsvps()]);
+  }
+
+  render();
+  handleDeepLink();
+})();
+</script>
+</body>
+</html>
