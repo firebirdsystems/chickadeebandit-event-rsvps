@@ -363,6 +363,7 @@ const EVENTS_URL = window.__EVENTS_URL    ?? "/api/events";
 
 // ─── State ────────────────────────────────────────────────────────────────────
 let members        = [];
+let memberMap      = new Map();
 let events         = [];
 let rsvps          = [];
 let ME             = null;  // resolved after loadMembers
@@ -382,7 +383,7 @@ async function db(sql, params = []) {
 }
 
 // ─── Member helpers ───────────────────────────────────────────────────────────
-function memberById(id) { return members.find(m => m.id === id); }
+function memberById(id) { return memberMap.get(id); }
 
 // ─── Data loading ─────────────────────────────────────────────────────────────
 async function loadMembers() {
@@ -394,11 +395,13 @@ async function loadMembers() {
       { id: "demo-4", name: "Riley",   role: "child" },
       { id: "demo-5", name: "Morgan",  role: "adult" },
     ];
+    memberMap = new Map(members.map(m => [m.id, m]));
     return;
   }
   try {
     const res = await fetch(`${CONTEXT}?keys=family.members`);
     members = ((await res.json())["family.members"]) ?? [];
+    memberMap = new Map(members.map(m => [m.id, m]));
   } catch { members = []; }
 }
 
