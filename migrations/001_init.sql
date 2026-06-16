@@ -1,6 +1,5 @@
-CREATE TABLE IF NOT EXISTS events (
+CREATE TABLE IF NOT EXISTS app_event_rsvps__events (
   id            TEXT    PRIMARY KEY,
-  household_id  UUID    NOT NULL DEFAULT current_setting('app.household_id', true)::uuid,
   title         TEXT    NOT NULL,
   description   TEXT    NOT NULL DEFAULT '',
   location      TEXT    NOT NULL DEFAULT '',
@@ -12,25 +11,22 @@ CREATE TABLE IF NOT EXISTS events (
   cancelled     INTEGER NOT NULL DEFAULT 0
 );
 
-CREATE INDEX IF NOT EXISTS events_household ON events(household_id);
 
-CREATE TABLE IF NOT EXISTS rsvps (
+CREATE TABLE IF NOT EXISTS app_event_rsvps__rsvps (
   id            TEXT    PRIMARY KEY,
-  household_id  UUID    NOT NULL DEFAULT current_setting('app.household_id', true)::uuid,
   event_id      TEXT    NOT NULL,
   member_id     TEXT    NOT NULL,
   status        TEXT    NOT NULL CHECK (status IN ('yes', 'no', 'maybe')),
   guest_count   INTEGER NOT NULL DEFAULT 0,
   note          TEXT    NOT NULL DEFAULT '',
   updated_at    TEXT    NOT NULL,
-  UNIQUE(event_id, member_id)
+  UNIQUE (event_id, member_id)
 );
 
-CREATE INDEX IF NOT EXISTS rsvps_event ON rsvps(event_id);
+CREATE INDEX IF NOT EXISTS rsvps_event ON app_event_rsvps__rsvps(event_id);
 
-CREATE TABLE IF NOT EXISTS activity (
+CREATE TABLE IF NOT EXISTS app_event_rsvps__activity (
   id            TEXT    PRIMARY KEY,
-  household_id  UUID    NOT NULL DEFAULT current_setting('app.household_id', true)::uuid,
   record_id     TEXT    NOT NULL,
   actor_id      TEXT    NOT NULL,
   action        TEXT    NOT NULL,

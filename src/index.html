@@ -408,7 +408,7 @@ async function loadMembers() {
 async function loadEvents() {
   if (!DB_URL) return;
   const { rows } = await db(
-    `SELECT * FROM events WHERE household_id = current_setting('app.household_id', true)::uuid ORDER BY event_date ASC`
+    `SELECT * FROM app_event_rsvps__events ORDER BY event_date ASC`
   );
   events = rows;
 }
@@ -416,7 +416,7 @@ async function loadEvents() {
 async function loadRsvps() {
   if (!DB_URL) return;
   const { rows } = await db(
-    `SELECT * FROM rsvps WHERE household_id = current_setting('app.household_id', true)::uuid`
+    `SELECT * FROM app_event_rsvps__rsvps`
   );
   rsvps = rows;
 }
@@ -434,7 +434,7 @@ async function createEvent(data) {
   events.push(newEvent);
 
   await db(
-    `INSERT INTO events (id, title, description, location, event_date, rsvp_deadline, headcount, created_by, created_at)
+    `INSERT INTO app_event_rsvps__events (id, title, description, location, event_date, rsvp_deadline, headcount, created_by, created_at)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [id, data.title, data.description, data.location, data.event_date,
      data.rsvp_deadline || null, data.headcount || null, ME?.id ?? "system", now]
@@ -465,7 +465,7 @@ async function updateEvent(id, data) {
   }
 
   await db(
-    `UPDATE events SET title=?, description=?, location=?, event_date=?, rsvp_deadline=?, headcount=? WHERE id=?`,
+    `UPDATE app_event_rsvps__events SET title=?, description=?, location=?, event_date=?, rsvp_deadline=?, headcount=? WHERE id=?`,
     [data.title, data.description, data.location, data.event_date,
      data.rsvp_deadline || null, data.headcount || null, id]
   );
@@ -484,7 +484,7 @@ async function cancelEvent(id) {
   })) return;
 
   if (ev) ev.cancelled = 1;
-  await db(`UPDATE events SET cancelled=1 WHERE id=?`, [id]);
+  await db(`UPDATE app_event_rsvps__events SET cancelled=1 WHERE id=?`, [id]);
 
   await Promise.all([
     logActivity(id, "event_cancelled", ev?.title ?? ""),
@@ -510,7 +510,7 @@ async function saveRsvp(eventId, status, guestCount, note) {
   render();
 
   db(
-    `INSERT INTO rsvps (id, event_id, member_id, status, guest_count, note, updated_at)
+    `INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at)
      VALUES (?, ?, ?, ?, ?, ?, ?)
      ON CONFLICT(event_id, member_id) DO UPDATE SET
        status=excluded.status,
@@ -561,7 +561,7 @@ function exportCsv(eventId) {
 async function logActivity(recordId, action, detail = "") {
   const id = crypto.randomUUID();
   await db(
-    `INSERT INTO activity (id, record_id, actor_id, action, detail, created_at) VALUES (?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO app_event_rsvps__activity (id, record_id, actor_id, action, detail, created_at) VALUES (?, ?, ?, ?, ?, ?)`,
     [id, recordId, ME?.id ?? "system", action, detail, new Date().toISOString()]
   );
 }
