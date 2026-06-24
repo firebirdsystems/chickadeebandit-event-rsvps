@@ -7,7 +7,7 @@ export function canCreateEvent(member) {
 
 export function canManageEvent(event, member) {
   if (!member) return false;
-  return isAdult(member) || event.created_by === member.id;
+  return isAdult(member);
 }
 
 export function isUpcoming(event) {

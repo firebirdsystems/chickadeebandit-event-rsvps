@@ -16,6 +16,21 @@
     "requires_approval": false
   },
   "storage": "db",
+  "row_policies": {
+    "events": {
+      "kind": "adult_writable"
+    },
+    "rsvps": {
+      "kind": "owner_only",
+      "member_column": "member_id",
+      "adults_bypass": true
+    },
+    "activity": {
+      "kind": "owner_only",
+      "member_column": "actor_id",
+      "adults_bypass": true
+    }
+  },
   "publishes": ["event.created", "event.cancelled"],
   "alert_on": ["event.created"],
   "nav": { "label": "RSVPs" },
