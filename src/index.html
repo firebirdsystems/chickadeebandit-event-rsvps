@@ -501,7 +501,7 @@ async function saveRsvp(eventId, status, guestCount, note) {
   const id  = crypto.randomUUID();
   const now = new Date().toISOString();
 
-  const rsvp = { id, event_id: eventId, member_id: memberId, status, guest_count: guestCount, note, updated_at: now };
+  const rsvp = { id, event_id: eventId, member_id: memberId, status, guest_count: guestCount, note, updated_at: now, visibility: "everyone" };
   const idx  = rsvps.findIndex(r => r.event_id === eventId && r.member_id === memberId);
   if (idx >= 0) rsvps[idx] = rsvp;
   else rsvps.push(rsvp);
@@ -509,15 +509,17 @@ async function saveRsvp(eventId, status, guestCount, note) {
   _selectedStatus = status;
   render();
 
+  // visibility='everyone' so the headcount/attendance is readable by every member;
+  // the owner_or_visibility policy still restricts writes to the row's own member.
   db(
-    `INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?)
+    `INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
      ON CONFLICT(event_id, member_id) DO UPDATE SET
        status=excluded.status,
        guest_count=excluded.guest_count,
        note=excluded.note,
        updated_at=excluded.updated_at`,
-    [id, eventId, memberId, status, guestCount, note, now]
+    [id, eventId, memberId, status, guestCount, note, now, "everyone"]
   );
 }
 
