@@ -347,7 +347,7 @@
 </div>
 
 <script type="module">
-import { memberColor, initial, esc, hubConfirm } from "/hub-sdk.js";
+import { hubAlert, memberColor, initial, esc, hubConfirm } from "/hub-sdk.js";
 import {
   canCreateEvent, canManageEvent, isAdult,
   isUpcoming, deadlinePassed,
@@ -528,7 +528,7 @@ function sendReminders(eventId) {
   const ev     = events.find(e => e.id === eventId);
   const counts = rsvpCounts(eventId, rsvps, members);
   if (!ev || counts.noResponse.length === 0) {
-    alert("Everyone has already responded!");
+    hubAlert("Everyone has already responded!");
     return;
   }
   const names = counts.noResponse.map(m => m.name).join(", ");
