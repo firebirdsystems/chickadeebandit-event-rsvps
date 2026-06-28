@@ -3,6 +3,7 @@ import {
   canCreateEvent, canManageEvent,
   isUpcoming, deadlinePassed,
   myRsvp, rsvpCounts, totalAttendees,
+  buildReminderNotification, summarizeReminderDelivery,
 } from "../src/logic.js";
 
 const ADULT = { id: "a1", name: "Alice", role: "adult" };
@@ -125,5 +126,48 @@ describe("totalAttendees", () => {
   it("handles zero guests", () => {
     const r = [{ event_id: "e1", member_id: "a1", status: "yes", guest_count: 0 }];
     expect(totalAttendees("e1", r)).toBe(1);
+  });
+});
+
+// ── reminders ────────────────────────────────────────────────────────────────
+
+describe("buildReminderNotification", () => {
+  it("targets only non-responders", () => {
+    const event = { title: "Chapter Dinner" };
+    const nonResponders = [
+      { id: "c1", name: "Charlie" },
+      { id: "m3", name: "Morgan" },
+    ];
+
+    const reminder = buildReminderNotification(event, nonResponders, "Fri, Jul 3, 2026");
+
+    expect(reminder.audience).toEqual(["c1", "m3"]);
+    expect(reminder.title).toBe("RSVP needed: Chapter Dinner");
+    expect(reminder.body).toContain("Charlie, Morgan");
+    expect(reminder.body).toContain("Chapter Dinner");
+    expect(reminder.body).toContain("Fri, Jul 3, 2026");
+  });
+});
+
+describe("summarizeReminderDelivery", () => {
+  it("explains when recipients have no registered devices", () => {
+    expect(summarizeReminderDelivery({ web: { total: 0 }, expo: { total: 0 } }, 2))
+      .toContain("No notification subscriptions found");
+  });
+
+  it("explains when subscriptions exist but no sends succeeded", () => {
+    const message = summarizeReminderDelivery(
+      { web: { total: 1, sent: 0 }, expo: { total: 0, sent: 0 } },
+      1,
+    );
+    expect(message).toContain("no notifications were delivered");
+  });
+
+  it("summarizes successful delivery counts", () => {
+    const message = summarizeReminderDelivery(
+      { web: { total: 2, sent: 1 }, expo: { total: 1, sent: 1 } },
+      2,
+    );
+    expect(message).toBe("Reminder sent to 2 devices for 2 non-responders.");
   });
 });

@@ -352,6 +352,7 @@ import {
   canCreateEvent, canManageEvent, isAdult,
   isUpcoming, deadlinePassed,
   myRsvp, rsvpCounts, totalAttendees,
+  buildReminderNotification, summarizeReminderDelivery,
 } from "./logic.js";
 
 // ─── Runtime globals ──────────────────────────────────────────────────────────
@@ -523,7 +524,7 @@ async function saveRsvp(eventId, status, guestCount, note) {
   );
 }
 
-function sendReminders(eventId) {
+async function sendReminders(eventId) {
   if (!ME || !isAdult(ME)) return;
   const ev     = events.find(e => e.id === eventId);
   const counts = rsvpCounts(eventId, rsvps, members);
@@ -531,11 +532,13 @@ function sendReminders(eventId) {
     hubAlert("Everyone has already responded!");
     return;
   }
-  const names = counts.noResponse.map(m => m.name).join(", ");
-  sendNotification(
-    `RSVP needed: ${ev.title}`,
-    `Please respond: ${names} — haven't RSVPed for "${ev.title}" on ${fmtDate(ev.event_date)}.`
+  const reminder = buildReminderNotification(ev, counts.noResponse, fmtDate(ev.event_date));
+  const result = await sendNotification(
+    reminder.title,
+    reminder.body,
+    reminder.audience
   );
+  hubAlert(summarizeReminderDelivery(result, reminder.audience.length));
 }
 
 function exportCsv(eventId) {
@@ -583,13 +586,18 @@ function postHubActivity(type, description, eventId) {
   }).catch(() => {});
 }
 
-function sendNotification(title, body) {
-  if (!DB_URL) return;
-  fetch(window.__NOTIFY_URL ?? "/api/notifications/send", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ title, body, url: `/run/${APP_ID}` }),
-  }).catch(() => {});
+async function sendNotification(title, body, audience = "all") {
+  if (!DB_URL) return null;
+  try {
+    const res = await fetch(window.__NOTIFY_URL ?? "/api/notifications/send", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title, body, audience, url: `/run/${APP_ID}` }),
+    });
+    return await res.json().catch(() => null);
+  } catch {
+    return null;
+  }
 }
 
 function publishEvent(type, eventId, title) {

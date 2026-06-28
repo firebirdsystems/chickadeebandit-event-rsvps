@@ -47,3 +47,28 @@ export function totalAttendees(eventId, rsvps) {
     .filter(r => r.event_id === eventId && r.status === "yes")
     .reduce((sum, r) => sum + 1 + (r.guest_count ?? 0), 0);
 }
+
+export function buildReminderNotification(event, nonResponders, formattedEventDate) {
+  const audience = nonResponders.map(m => m.id);
+  const names = nonResponders.map(m => m.name).join(", ");
+  return {
+    audience,
+    title: `RSVP needed: ${event.title}`,
+    body: `Please respond: ${names} — haven't RSVPed for "${event.title}" on ${formattedEventDate}.`,
+  };
+}
+
+export function summarizeReminderDelivery(result, nonResponderCount) {
+  const web = result?.web ?? {};
+  const expo = result?.expo ?? {};
+  const total = (web.total ?? 0) + (expo.total ?? 0);
+  const sent = (web.sent ?? 0) + (expo.sent ?? 0);
+
+  if (total === 0) {
+    return "No notification subscriptions found for the non-responders. Ask them to enable notifications in Settings on their browser or device.";
+  }
+  if (sent === 0) {
+    return "Reminder queued, but no notifications were delivered. Their notification subscription may be stale or blocked by the browser/OS.";
+  }
+  return `Reminder sent to ${sent} device${sent === 1 ? "" : "s"} for ${nonResponderCount} non-responder${nonResponderCount === 1 ? "" : "s"}.`;
+}
