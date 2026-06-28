@@ -347,7 +347,7 @@
 </div>
 
 <script type="module">
-import { hubAlert, memberColor, initial, esc, hubConfirm } from "/hub-sdk.js";
+import { hubAlert, memberColor, initial, esc, hubConfirm, sendHubNotification } from "/hub-sdk.js";
 import {
   canCreateEvent, canManageEvent, isAdult,
   isUpcoming, deadlinePassed,
@@ -444,7 +444,12 @@ async function createEvent(data) {
   await Promise.all([
     logActivity(id, "event_created", data.title),
     postHubActivity("event_created", `${ME?.name ?? "Someone"} created a new event: "${data.title}"`, id),
-    sendNotification(`New event: ${data.title}`, `${ME?.name ?? "Someone"} added a new event — RSVP now!`),
+    sendNotification(
+      `New event: ${data.title}`,
+      `${ME?.name ?? "Someone"} added a new event — RSVP now!`,
+      "all",
+      `/open/${APP_ID}?eventId=${encodeURIComponent(id)}`
+    ),
     publishEvent("event.created", id, data.title),
   ]);
 
@@ -536,7 +541,8 @@ async function sendReminders(eventId) {
   const result = await sendNotification(
     reminder.title,
     reminder.body,
-    reminder.audience
+    reminder.audience,
+    reminder.url
   );
   hubAlert(summarizeReminderDelivery(result, reminder.audience.length));
 }
@@ -586,18 +592,9 @@ function postHubActivity(type, description, eventId) {
   }).catch(() => {});
 }
 
-async function sendNotification(title, body, audience = "all") {
+async function sendNotification(title, body, audience = "all", url = `/open/${APP_ID}`) {
   if (!DB_URL) return null;
-  try {
-    const res = await fetch(window.__NOTIFY_URL ?? "/api/notifications/send", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title, body, audience, url: `/run/${APP_ID}` }),
-    });
-    return await res.json().catch(() => null);
-  } catch {
-    return null;
-  }
+  return sendHubNotification({ title, body, audience, url });
 }
 
 function publishEvent(type, eventId, title) {

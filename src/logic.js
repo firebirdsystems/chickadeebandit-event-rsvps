@@ -48,13 +48,15 @@ export function totalAttendees(eventId, rsvps) {
     .reduce((sum, r) => sum + 1 + (r.guest_count ?? 0), 0);
 }
 
-export function buildReminderNotification(event, nonResponders, formattedEventDate) {
+export function buildReminderNotification(event, nonResponders, formattedEventDate, appId = "event-rsvps") {
   const audience = nonResponders.map(m => m.id);
   const names = nonResponders.map(m => m.name).join(", ");
+  const qs = event.id ? `?eventId=${encodeURIComponent(event.id)}` : "";
   return {
     audience,
     title: `RSVP needed: ${event.title}`,
     body: `Please respond: ${names} — haven't RSVPed for "${event.title}" on ${formattedEventDate}.`,
+    url: `/open/${appId}${qs}`,
   };
 }
 

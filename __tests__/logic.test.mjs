@@ -133,7 +133,7 @@ describe("totalAttendees", () => {
 
 describe("buildReminderNotification", () => {
   it("targets only non-responders", () => {
-    const event = { title: "Chapter Dinner" };
+    const event = { id: "event 1", title: "Chapter Dinner" };
     const nonResponders = [
       { id: "c1", name: "Charlie" },
       { id: "m3", name: "Morgan" },
@@ -143,6 +143,7 @@ describe("buildReminderNotification", () => {
 
     expect(reminder.audience).toEqual(["c1", "m3"]);
     expect(reminder.title).toBe("RSVP needed: Chapter Dinner");
+    expect(reminder.url).toBe("/open/event-rsvps?eventId=event%201");
     expect(reminder.body).toContain("Charlie, Morgan");
     expect(reminder.body).toContain("Chapter Dinner");
     expect(reminder.body).toContain("Fri, Jul 3, 2026");
