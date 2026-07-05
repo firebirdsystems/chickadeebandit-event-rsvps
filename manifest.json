@@ -1,7 +1,7 @@
 {
   "id": "event-rsvps",
   "name": "Event RSVPs",
-  "version": "1.1.0",
+  "version": "1.0.0",
   "description": "Create org events and collect RSVPs — who's coming, headcount for catering, send reminders to non-responders, export attendee lists.",
   "entrypoint": "index.html",
   "runtime": "static",
@@ -25,7 +25,11 @@
       "member_column": "member_id",
       "visibility_column": "visibility",
       "everyone_values": ["everyone"],
-      "write_owner_only": true
+      "write_owner_only": true,
+      "unique_per_member": {
+        "member_column": "member_id",
+        "scope_columns": ["event_id"]
+      }
     },
     "activity": {
       "kind": "owner_only",

@@ -504,11 +504,13 @@ async function cancelEvent(id) {
 
 async function saveRsvp(eventId, status, guestCount, note) {
   const memberId = ME?.id ?? "demo";
-  const id  = crypto.randomUUID();
   const now = new Date().toISOString();
 
+  const idx      = rsvps.findIndex(r => r.event_id === eventId && r.member_id === memberId);
+  const existing = idx >= 0 ? rsvps[idx] : null;
+  const id       = existing?.id ?? crypto.randomUUID();
+
   const rsvp = { id, event_id: eventId, member_id: memberId, status, guest_count: guestCount, note, updated_at: now, visibility: "everyone" };
-  const idx  = rsvps.findIndex(r => r.event_id === eventId && r.member_id === memberId);
   if (idx >= 0) rsvps[idx] = rsvp;
   else rsvps.push(rsvp);
 
@@ -517,16 +519,20 @@ async function saveRsvp(eventId, status, guestCount, note) {
 
   // visibility='everyone' so the headcount/attendance is readable by every member;
   // the owner_or_visibility policy still restricts writes to the row's own member.
-  db(
-    `INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-     ON CONFLICT(event_id, member_id) DO UPDATE SET
-       status=excluded.status,
-       guest_count=excluded.guest_count,
-       note=excluded.note,
-       updated_at=excluded.updated_at`,
-    [id, eventId, memberId, status, guestCount, note, now, "everyone"]
-  );
+  // unique_per_member forbids upsert INSERTs, so update the existing row explicitly.
+  if (existing) {
+    db(
+      `UPDATE app_event_rsvps__rsvps SET status=?, guest_count=?, note=?, updated_at=?
+       WHERE event_id=? AND member_id=?`,
+      [status, guestCount, note, now, eventId, memberId]
+    );
+  } else {
+    db(
+      `INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [id, eventId, memberId, status, guestCount, note, now, "everyone"]
+    );
+  }
 }
 
 async function sendReminders(eventId) {
