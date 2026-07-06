@@ -701,7 +701,7 @@ function openCreateEventModal(existingId = null) {
     <div id="event-error" class="error-msg" style="display:none"></div>
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="submitEvent('${existingId ?? ""}')">
+      <button class="btn btn-primary" data-action="submit-event" data-id="${esc(existingId ?? "")}">
         ${ev ? "Save Changes" : "Create Event"}
       </button>
     </div>
@@ -799,7 +799,7 @@ function renderList() {
 function renderEventCard(ev) {
   const deadlinePast = deadlinePassed(ev);
   return `
-    <div class="event-card ${ev.cancelled ? "cancelled" : ""}" onclick="openEvent('${ev.id}')">
+    <div class="event-card ${ev.cancelled ? "cancelled" : ""}" data-action="open-event" data-id="${esc(ev.id)}">
       <div class="event-card-inner">
         <div class="event-card-top">
           <div>
@@ -865,7 +865,7 @@ function renderDetail(ev) {
                 placeholder="Dietary needs, arriving late…" />
             </div>
           </div>
-          <button class="btn btn-primary btn-sm" id="rsvp-save-btn" onclick="submitRsvp('${ev.id}')">
+          <button class="btn btn-primary btn-sm" id="rsvp-save-btn" data-action="submit-rsvp" data-id="${esc(ev.id)}">
             ${myR ? "Update RSVP" : "Save RSVP"}
           </button>
           ${myR ? `<span style="font-size:0.76rem;color:var(--muted);margin-left:10px">Updated ${fmtDateShort(myR.updated_at)}</span>` : ""}
@@ -938,11 +938,11 @@ function renderDetail(ev) {
 
   const actionsBar = canManage && !cancelled ? `
     <div class="actions-bar">
-      <button class="btn btn-ghost btn-sm" onclick="openCreateEventModal('${ev.id}')">✏️ Edit</button>
-      <button class="btn btn-ghost btn-sm" onclick="doSendReminders('${ev.id}')">🔔 Send Reminders</button>
-      <button class="btn btn-ghost btn-sm" onclick="doExport('${ev.id}')">⬇️ Export CSV</button>
+      <button class="btn btn-ghost btn-sm" data-action="edit-event" data-id="${esc(ev.id)}">✏️ Edit</button>
+      <button class="btn btn-ghost btn-sm" data-action="send-reminders" data-id="${esc(ev.id)}">🔔 Send Reminders</button>
+      <button class="btn btn-ghost btn-sm" data-action="export" data-id="${esc(ev.id)}">⬇️ Export CSV</button>
       <button class="btn btn-ghost btn-sm" style="color:var(--red);border-color:var(--red);opacity:.8"
-        onclick="doCancelEvent('${ev.id}')">Cancel Event</button>
+        data-action="cancel-event" data-id="${esc(ev.id)}">Cancel Event</button>
     </div>
   ` : "";
 
@@ -1067,6 +1067,26 @@ function loadDemoData() {
     { id: "dr8", event_id: "demo-e3", member_id: "demo-5", status: "yes",   guest_count: 0, note: "",                     updated_at: now.toISOString() },
   ];
 }
+
+// ─── Delegated click handling ─────────────────────────────────────────────────
+// Data-bearing controls carry attacker-influenced values (event ids are member-
+// writable via raw /api/db), so they use data-* attributes + delegation rather
+// than inline onclick="fn('${id}')" — HTML-escaping a value does not make it safe
+// inside an inline handler (entities decode back before the JS string is parsed).
+document.addEventListener("click", (e) => {
+  const el = e.target.closest("[data-action]");
+  if (!el) return;
+  const id = el.dataset.id ?? "";
+  switch (el.dataset.action) {
+    case "open-event":     window.openEvent(id); break;
+    case "submit-event":   window.submitEvent(id); break;
+    case "submit-rsvp":    window.submitRsvp(id); break;
+    case "edit-event":     window.openCreateEventModal(id || null); break;
+    case "send-reminders": window.doSendReminders(id); break;
+    case "export":         window.doExport(id); break;
+    case "cancel-event":   window.doCancelEvent(id); break;
+  }
+});
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
 (async () => {

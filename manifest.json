@@ -37,6 +37,39 @@
       "adults_bypass": true
     }
   },
+  "db_plaintext_columns": ["cancelled", "guest_count"],
+  "shareable": {
+    "event": {
+      "table": "events",
+      "title_column": "title",
+      "columns": [
+        { "column": "description", "label": "Details", "format": "multiline" },
+        { "column": "location", "label": "Location" },
+        { "column": "event_date", "label": "When", "format": "datetime" },
+        { "column": "rsvp_deadline", "label": "RSVP by", "format": "datetime" }
+      ],
+      "visible_where": { "column": "cancelled", "values": ["0"] },
+      "aggregates": [
+        {
+          "label": "Going",
+          "table": "rsvps",
+          "fk_column": "event_id",
+          "op": "count",
+          "where_column": "status",
+          "where_values": ["yes"]
+        },
+        {
+          "label": "Extra guests",
+          "table": "rsvps",
+          "fk_column": "event_id",
+          "op": "sum",
+          "value_column": "guest_count",
+          "where_column": "status",
+          "where_values": ["yes"]
+        }
+      ]
+    }
+  },
   "publishes": ["event.created", "event.cancelled"],
   "alert_on": ["event.created"],
   "nav": { "label": "RSVPs" },
