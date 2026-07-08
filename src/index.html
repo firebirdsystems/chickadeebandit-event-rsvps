@@ -347,7 +347,7 @@
 </div>
 
 <script type="module">
-import { hubAlert, memberColor, initial, esc, hubConfirm, sendHubNotification } from "/hub-sdk.js";
+import { hubAlert, memberColor, initial, esc, hubConfirm, sendHubNotification, createShareHelper } from "/hub-sdk.js";
 import {
   canCreateEvent, canManageEvent, isAdult,
   isUpcoming, deadlinePassed,
@@ -361,6 +361,7 @@ const DB_URL     = window.__DB_URL        ?? "";
 const APP_ID     = window.__APP_ID        ?? "event-rsvps";
 const HUB_MEMBER = window.__CURRENT_MEMBER ?? null;
 const EVENTS_URL = window.__EVENTS_URL    ?? "/api/events";
+const share      = createShareHelper(window.__SHARE_CREATE_URL, window.__SHARE_REVOKE_URL, window.__SHARE_LIST_URL);
 
 // ─── State ────────────────────────────────────────────────────────────────────
 let members        = [];
@@ -709,6 +710,83 @@ function openCreateEventModal(existingId = null) {
   setTimeout(() => document.getElementById("f-title")?.focus(), 50);
 }
 
+// ─── Share links ──────────────────────────────────────────────────────────────
+let _shareLinks = []; // last-fetched links, for copy-by-id lookups
+
+async function openShareModal(eventId) {
+  const ev = events.find(e => e.id === eventId);
+  if (!ev) return;
+  _shareLinks = await share.list();
+  const active = _shareLinks.filter(l =>
+    l.itemId === eventId && !l.revokedAt && new Date(l.expiresAt) > new Date());
+
+  const rows = active.map(l => `
+    <div style="display:flex;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">
+      <div style="flex:1;min-width:0">
+        <input readonly value="${esc(l.url)}" onclick="this.select()"
+          style="width:100%;font-size:0.8rem;padding:4px 6px;border:1px solid var(--border);border-radius:6px;background:var(--bg)" />
+        <div style="font-size:0.75rem;color:var(--muted);margin-top:3px">
+          Expires ${new Date(l.expiresAt).toLocaleDateString()} · ${l.viewCount} view${l.viewCount === 1 ? "" : "s"}
+        </div>
+      </div>
+      <button class="btn btn-ghost btn-sm" data-action="copy-share" data-id="${esc(l.id)}">Copy</button>
+      <button class="btn btn-ghost btn-sm" style="color:var(--red);border-color:var(--red)"
+        data-action="revoke-share" data-id="${esc(l.id)}" data-event-id="${esc(eventId)}">Revoke</button>
+    </div>`).join("");
+
+  openModal(`
+    <h3>Share “${esc(ev.title)}”</h3>
+    <p style="font-size:0.85rem;color:var(--muted);margin-bottom:10px">
+      Anyone with the link can view the event details and going count — no account
+      needed, and no names are shown. Links expire automatically.
+    </p>
+    ${rows || `<p style="font-size:0.85rem;color:var(--muted);padding:8px 0">No active links yet.</p>`}
+    <div style="display:flex;gap:8px;align-items:center;margin-top:14px">
+      <select id="share-expiry" style="padding:6px;border:1px solid var(--border);border-radius:6px;background:var(--bg);font-size:0.85rem">
+        <option value="24">1 day</option>
+        <option value="168" selected>7 days</option>
+        <option value="720">30 days</option>
+      </select>
+      <button class="btn btn-primary btn-sm" data-action="create-share" data-id="${esc(eventId)}">Create link</button>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Close</button>
+    </div>
+  `);
+}
+
+async function createShare(eventId) {
+  const ev = events.find(e => e.id === eventId);
+  const hours = Number(document.getElementById("share-expiry")?.value) || undefined;
+  const btn = modalEl?.querySelector('[data-action="create-share"]');
+  if (btn) { btn.disabled = true; btn.textContent = "Creating…"; }
+  try {
+    const link = await share.create("event", eventId, { expiresInHours: hours, label: ev?.title });
+    try { await navigator.clipboard.writeText(link.url); } catch { /* re-render shows the url to copy manually */ }
+    await openShareModal(eventId); // refresh the list in place
+  } catch (err) {
+    if (btn) { btn.disabled = false; btn.textContent = "Create link"; }
+    hubAlert("Couldn't create share link", { description: err.message });
+  }
+}
+
+async function copyShare(id) {
+  const link = _shareLinks.find(l => l.id === id);
+  if (!link) return;
+  try { await navigator.clipboard.writeText(link.url); }
+  catch { hubAlert("Couldn't copy — select the link text and copy it manually."); }
+}
+
+async function revokeShare(id, eventId) {
+  if (!await hubConfirm("Revoke this share link?", { description: "Anyone using it will immediately lose access.", confirmLabel: "Revoke" })) return;
+  try {
+    await share.revoke(id);
+    await openShareModal(eventId);
+  } catch (err) {
+    hubAlert("Couldn't revoke share link", { description: err.message });
+  }
+}
+
 window.submitEvent = async function(existingId) {
   const title     = document.getElementById("f-title").value.trim();
   const dateVal   = document.getElementById("f-date").value;
@@ -936,15 +1014,22 @@ function renderDetail(ev) {
     </div>
   `;
 
+  // External sharing is adult-gated (hub enforces role + household policy), not
+  // manager-gated: any adult may pass a public link along. Cancelled events are
+  // excluded to match the manifest's visible_where gate on the public page.
+  const shareBtn = share.enabled && isAdult(ME) && !cancelled
+    ? `<button class="btn btn-ghost btn-sm" data-action="share-event" data-id="${esc(ev.id)}">🔗 Share</button>`
+    : "";
   const actionsBar = canManage && !cancelled ? `
     <div class="actions-bar">
       <button class="btn btn-ghost btn-sm" data-action="edit-event" data-id="${esc(ev.id)}">✏️ Edit</button>
+      ${shareBtn}
       <button class="btn btn-ghost btn-sm" data-action="send-reminders" data-id="${esc(ev.id)}">🔔 Send Reminders</button>
       <button class="btn btn-ghost btn-sm" data-action="export" data-id="${esc(ev.id)}">⬇️ Export CSV</button>
       <button class="btn btn-ghost btn-sm" style="color:var(--red);border-color:var(--red);opacity:.8"
         data-action="cancel-event" data-id="${esc(ev.id)}">Cancel Event</button>
     </div>
-  ` : "";
+  ` : (shareBtn ? `<div class="actions-bar">${shareBtn}</div>` : "");
 
   document.getElementById("root").innerHTML = `
     <button class="back-btn" onclick="backToList()">← All Events</button>
@@ -1085,6 +1170,10 @@ document.addEventListener("click", (e) => {
     case "send-reminders": window.doSendReminders(id); break;
     case "export":         window.doExport(id); break;
     case "cancel-event":   window.doCancelEvent(id); break;
+    case "share-event":    openShareModal(id); break;
+    case "create-share":   createShare(id); break;
+    case "copy-share":     copyShare(id); break;
+    case "revoke-share":   revokeShare(id, el.dataset.eventId ?? ""); break;
   }
 });
 
