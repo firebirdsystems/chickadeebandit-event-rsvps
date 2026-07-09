@@ -1,0 +1,43 @@
+{
+  "scenarios": [
+    {
+      "name": "one RSVP per member per event; other members can still RSVP",
+      "members": { "host": "adult", "a": "adult", "b": "adult" },
+      "steps": [
+        {
+          "action": "seedRaw",
+          "sql": "INSERT INTO app_event_rsvps__events (id, title, event_date, created_by, created_at) VALUES (?, ?, ?, ?, ?)",
+          "params": ["ev1", "BBQ", "2026-08-01", "{{host}}", "2026-07-01T00:00:00Z"]
+        },
+        {
+          "action": "db",
+          "as": "a",
+          "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility) VALUES (?, ?, ?, 'yes', 0, '', ?, 'everyone')",
+          "params": ["r1", "ev1", "{{a}}", "2026-07-02T00:00:00Z"],
+          "expect": { "status": 200 }
+        },
+        {
+          "action": "db",
+          "as": "a",
+          "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility) VALUES (?, ?, ?, 'no', 0, '', ?, 'everyone')",
+          "params": ["r2", "ev1", "{{a}}", "2026-07-03T00:00:00Z"],
+          "expect": { "status": 403 }
+        },
+        {
+          "action": "db",
+          "as": "b",
+          "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility) VALUES (?, ?, ?, 'maybe', 0, '', ?, 'everyone')",
+          "params": ["r3", "ev1", "{{b}}", "2026-07-02T00:00:00Z"],
+          "expect": { "status": 200 }
+        },
+        {
+          "action": "db",
+          "as": "b",
+          "sql": "SELECT id FROM app_event_rsvps__rsvps WHERE event_id = ?",
+          "params": ["ev1"],
+          "expect": { "status": 200, "rowCount": 2 }
+        }
+      ]
+    }
+  ]
+}
