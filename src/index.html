@@ -713,10 +713,14 @@ function openCreateEventModal(existingId = null) {
 // ─── Share links ──────────────────────────────────────────────────────────────
 let _shareLinks = []; // last-fetched links, for copy-by-id lookups
 
+let _shareEntitled = false; // premium `sharing` capability, from last status()
+
 async function openShareModal(eventId) {
   const ev = events.find(e => e.id === eventId);
   if (!ev) return;
-  _shareLinks = await share.list();
+  const status = await share.status();
+  _shareLinks = status.links;
+  _shareEntitled = status.entitled;
   const active = _shareLinks.filter(l =>
     l.itemId === eventId && !l.revokedAt && new Date(l.expiresAt) > new Date());
 
@@ -726,7 +730,9 @@ async function openShareModal(eventId) {
         <input readonly value="${esc(l.url)}" onclick="this.select()"
           style="width:100%;font-size:0.8rem;padding:4px 6px;border:1px solid var(--border);border-radius:6px;background:var(--bg)" />
         <div style="font-size:0.75rem;color:var(--muted);margin-top:3px">
-          Expires ${new Date(l.expiresAt).toLocaleDateString()} · ${l.viewCount} view${l.viewCount === 1 ? "" : "s"}
+          Expires ${new Date(l.expiresAt).toLocaleDateString()} · ${l.viewCount} view${l.viewCount === 1 ? "" : "s"}${
+            l.writable ? ` · ${l.submissionCount} guest RSVP${l.submissionCount === 1 ? "" : "s"}` : ""}${
+            l.hasPassword ? " · 🔒 password" : ""}${l.writable ? " · ✍️ collects RSVPs" : ""}
         </div>
       </div>
       <button class="btn btn-ghost btn-sm" data-action="copy-share" data-id="${esc(l.id)}">Copy</button>
@@ -734,18 +740,30 @@ async function openShareModal(eventId) {
         data-action="revoke-share" data-id="${esc(l.id)}" data-event-id="${esc(eventId)}">Revoke</button>
     </div>`).join("");
 
+  // Premium (`sharing`) controls: writable guest RSVPs, password, long expiry.
+  // Shown only to entitled households; no in-app upsell for now.
+  const premiumControls = _shareEntitled ? `
+    <label style="display:flex;gap:6px;align-items:center;font-size:0.85rem;margin-top:10px">
+      <input type="checkbox" id="share-writable" /> Let guests RSVP through this link
+    </label>
+    <input id="share-password" type="text" placeholder="Optional password (min 4 chars)" autocomplete="off"
+      style="width:100%;margin-top:8px;padding:6px;border:1px solid var(--border);border-radius:6px;background:var(--bg);font-size:0.85rem" />
+  ` : "";
+
   openModal(`
     <h3>Share “${esc(ev.title)}”</h3>
     <p style="font-size:0.85rem;color:var(--muted);margin-bottom:10px">
       Anyone with the link can view the event details and going count — no account
-      needed, and no names are shown. Links expire automatically.
+      needed. Links expire automatically.
     </p>
     ${rows || `<p style="font-size:0.85rem;color:var(--muted);padding:8px 0">No active links yet.</p>`}
+    ${premiumControls}
     <div style="display:flex;gap:8px;align-items:center;margin-top:14px">
       <select id="share-expiry" style="padding:6px;border:1px solid var(--border);border-radius:6px;background:var(--bg);font-size:0.85rem">
         <option value="24">1 day</option>
         <option value="168" selected>7 days</option>
         <option value="720">30 days</option>
+        ${_shareEntitled ? `<option value="8760">1 year</option>` : ""}
       </select>
       <button class="btn btn-primary btn-sm" data-action="create-share" data-id="${esc(eventId)}">Create link</button>
     </div>
@@ -758,10 +776,12 @@ async function openShareModal(eventId) {
 async function createShare(eventId) {
   const ev = events.find(e => e.id === eventId);
   const hours = Number(document.getElementById("share-expiry")?.value) || undefined;
+  const writable = !!document.getElementById("share-writable")?.checked;
+  const password = document.getElementById("share-password")?.value?.trim() || undefined;
   const btn = modalEl?.querySelector('[data-action="create-share"]');
   if (btn) { btn.disabled = true; btn.textContent = "Creating…"; }
   try {
-    const link = await share.create("event", eventId, { expiresInHours: hours, label: ev?.title });
+    const link = await share.create("event", eventId, { expiresInHours: hours, label: ev?.title, writable, password });
     try { await navigator.clipboard.writeText(link.url); } catch { /* re-render shows the url to copy manually */ }
     await openShareModal(eventId); // refresh the list in place
   } catch (err) {

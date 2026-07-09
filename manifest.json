@@ -37,7 +37,7 @@
       "adults_bypass": true
     }
   },
-  "db_plaintext_columns": ["cancelled", "guest_count"],
+  "db_plaintext_columns": ["cancelled", "guest_count", "guest_name", "source"],
   "shareable": {
     "event": {
       "table": "events",
@@ -66,12 +66,33 @@
           "value_column": "guest_count",
           "where_column": "status",
           "where_values": ["yes"]
+        },
+        {
+          "label": "Guest RSVPs",
+          "table": "guest_rsvps",
+          "fk_column": "event_id",
+          "op": "sum",
+          "value_column": "guest_count",
+          "where_column": "status",
+          "where_values": ["going"]
         }
-      ]
+      ],
+      "submit": {
+        "table": "guest_rsvps",
+        "fk_column": "event_id",
+        "fields": [
+          { "column": "guest_name", "label": "Your name", "type": "text", "required": true, "max_length": 80 },
+          { "column": "guest_count", "label": "How many are coming (including you)?", "type": "number", "required": true, "min": 1, "max": 20 },
+          { "column": "status", "label": "Will you attend?", "type": "select", "required": true, "values": ["going", "maybe"] }
+        ],
+        "fixed_values": { "source": "external" },
+        "max_submissions": 200,
+        "event": "event.rsvp_submitted"
+      }
     }
   },
-  "publishes": ["event.created", "event.cancelled"],
-  "alert_on": ["event.created"],
+  "publishes": ["event.created", "event.cancelled", "event.rsvp_submitted"],
+  "alert_on": ["event.created", "event.rsvp_submitted"],
   "nav": { "label": "RSVPs" },
   "resource_limits": {
     "max_db_bytes": 52428800
