@@ -520,7 +520,7 @@ async function saveRsvp(eventId, status, guestCount, note) {
 
   // visibility='everyone' so the headcount/attendance is readable by every member;
   // the owner_or_visibility policy still restricts writes to the row's own member.
-  // unique_per_member forbids upsert INSERTs, so update the existing row explicitly.
+  // max_per_member forbids upsert INSERTs, so update the existing row explicitly.
   if (existing) {
     db(
       `UPDATE app_event_rsvps__rsvps SET status=?, guest_count=?, note=?, updated_at=?

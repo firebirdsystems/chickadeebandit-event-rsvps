@@ -26,15 +26,22 @@
       "visibility_column": "visibility",
       "everyone_values": ["everyone"],
       "write_owner_only": true,
-      "unique_per_member": {
+      "max_per_member": {
         "member_column": "member_id",
-        "scope_columns": ["event_id"]
+        "scope_columns": ["event_id"],
+        "limit": 1
       }
     },
     "activity": {
       "kind": "owner_only",
       "member_column": "actor_id",
-      "adults_bypass": true
+      "adults_bypass": true,
+      "retain_days": { "default": 365, "timestamp_column": "created_at", "override_key": "activity_history" }
+    },
+    "guest_rsvps": {
+      "kind": "endpoint_only",
+      "read": "everyone",
+      "max_rows": 200
     }
   },
   "db_plaintext_columns": ["cancelled", "guest_count", "guest_name", "source"],
