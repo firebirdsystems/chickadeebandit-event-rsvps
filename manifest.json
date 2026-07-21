@@ -7,6 +7,7 @@
   "runtime": "static",
   "category": "general",
   "tags": ["events", "rsvp", "attendance", "everyone"],
+  "contexts": ["household", "shared_space", "shared_space.roster"],
   "data_access": {
     "reads": ["family.members"],
     "writes": []
@@ -18,7 +19,8 @@
   "storage": "db",
   "row_policies": {
     "events": {
-      "kind": "adult_writable"
+      "kind": "adult_writable",
+      "steward_writes_only": true
     },
     "rsvps": {
       "kind": "owner_or_visibility",

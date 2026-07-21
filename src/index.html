@@ -360,6 +360,13 @@ const CONTEXT    = window.__CONTEXT_URL   ?? "";
 const DB_URL     = window.__DB_URL        ?? "";
 const APP_ID     = window.__APP_ID        ?? "event-rsvps";
 const HUB_MEMBER = window.__CURRENT_MEMBER ?? null;
+const IS_ADMIN   = window.__IS_ADMIN === true;
+const IS_ROSTER  = window.__SPACE_KIND === "roster";
+// Who may create and manage events (and share them). In a roster only the
+// steward (space admin) authors events; everyone else just RSVPs. Elsewhere any
+// adult may. The hub enforces this server-side (adult_writable +
+// steward_writes_only on `events`); this only hides controls that would 403.
+const canSteward = (m) => IS_ROSTER ? IS_ADMIN : isAdult(m);
 const EVENTS_URL = window.__EVENTS_URL    ?? "/api/events";
 const share      = createShareHelper(window.__SHARE_CREATE_URL, window.__SHARE_REVOKE_URL, window.__SHARE_LIST_URL);
 
@@ -537,7 +544,7 @@ async function saveRsvp(eventId, status, guestCount, note) {
 }
 
 async function sendReminders(eventId) {
-  if (!ME || !isAdult(ME)) return;
+  if (!ME || !canSteward(ME)) return;
   const ev     = events.find(e => e.id === eventId);
   const counts = rsvpCounts(eventId, rsvps, members);
   if (!ev || counts.noResponse.length === 0) {
@@ -865,7 +872,7 @@ function renderList() {
   const upcoming = events.filter(e => isUpcoming(e));
   const past     = events.filter(e => !isUpcoming(e));
   const showing  = listTab === "upcoming" ? upcoming : past;
-  const canCreate = canCreateEvent(ME);
+  const canCreate = canCreateEvent(ME) && (!IS_ROSTER || IS_ADMIN);
 
   document.getElementById("root").innerHTML = `
     <div class="page-header">
@@ -928,7 +935,7 @@ function renderEventCard(ev) {
 
 // ─── Detail view ──────────────────────────────────────────────────────────────
 function renderDetail(ev) {
-  const canManage    = canManageEvent(ev, ME);
+  const canManage    = canManageEvent(ev, ME) && (!IS_ROSTER || IS_ADMIN);
   const cancelled    = !!ev.cancelled;
   const deadlinePast = deadlinePassed(ev);
   const canRsvp      = !cancelled && !deadlinePast && ME;
@@ -1037,7 +1044,7 @@ function renderDetail(ev) {
   // External sharing is adult-gated (hub enforces role + household policy), not
   // manager-gated: any adult may pass a public link along. Cancelled events are
   // excluded to match the manifest's visible_where gate on the public page.
-  const shareBtn = share.enabled && isAdult(ME) && !cancelled
+  const shareBtn = share.enabled && canSteward(ME) && !cancelled
     ? `<button class="btn btn-ghost btn-sm" data-action="share-event" data-id="${esc(ev.id)}">🔗 Share</button>`
     : "";
   const actionsBar = canManage && !cancelled ? `
