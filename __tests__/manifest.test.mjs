@@ -38,6 +38,26 @@ describe("manifest.json", () => {
     expect(Array.isArray(manifest.data_access.reads)).toBe(true);
     expect(Array.isArray(manifest.data_access.writes)).toBe(true);
   });
+
+  // Only `activity` had retention; past events, their member RSVPs and their
+  // external guest RSVPs accumulated forever, which in an events app is the
+  // bulk of the data. Keyed on event_date rather than created_at so the window
+  // runs from when the event happened — an event entered years ahead of time is
+  // not old. The runner truncates its cutoff to a date for a `_date` column,
+  // and events_date_cancelled (002) already leads on it, so no index migration
+  // is needed. Both child tables hang off event_id and would otherwise be
+  // orphaned by the parent prune; `activity` is not listed because its own
+  // 365-day window already retires those rows first.
+  it("expires events two years after they happen, with both RSVP tables", () => {
+    const retain = manifest.row_policies?.events?.retain_days;
+    expect(retain?.default).toBe(730);
+    expect(retain?.timestamp_column).toBe("event_date");
+    expect(retain?.override_key).toBe("event_history");
+    expect(retain?.dependent_tables).toEqual([
+      { table: "rsvps", foreign_key: "event_id" },
+      { table: "guest_rsvps", foreign_key: "event_id" },
+    ]);
+  });
 });
 
 // ── ai_access SQL file validation ─────────────────────────────────────────────

@@ -388,7 +388,13 @@ async function db(sql, params = []) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ sql, params }),
   });
-  return res.json();
+  const json = await res.json();
+  // The hub reports a refused write as a JSON body with an `error` key
+  // (403 row policy, 400 bad statement, 507 over quota). fetch() does not
+  // reject on those, so without this throw every caller's rollback and
+  // error toast below is unreachable code.
+  if (!res.ok || json.error) throw new Error(json.error || `Database request failed (${res.status})`);
+  return json;
 }
 
 // ─── Member helpers ───────────────────────────────────────────────────────────

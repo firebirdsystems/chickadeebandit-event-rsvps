@@ -20,7 +20,16 @@
   "row_policies": {
     "events": {
       "kind": "adult_writable",
-      "steward_writes_only": true
+      "steward_writes_only": true,
+      "retain_days": {
+        "default": 730,
+        "timestamp_column": "event_date",
+        "override_key": "event_history",
+        "dependent_tables": [
+          { "table": "rsvps", "foreign_key": "event_id" },
+          { "table": "guest_rsvps", "foreign_key": "event_id" }
+        ]
+      }
     },
     "rsvps": {
       "kind": "owner_or_visibility",
@@ -45,6 +54,11 @@
       "read": "everyone",
       "max_rows": 200
     }
+  },
+  "member_references": {
+    "events": { "column": "created_by", "on_removed": "keep" },
+    "rsvps": { "column": "member_id", "on_removed": "delete" },
+    "activity": { "column": "actor_id", "on_removed": "keep" }
   },
   "db_plaintext_columns": ["cancelled", "guest_count", "guest_name", "source"],
   "shareable": {
