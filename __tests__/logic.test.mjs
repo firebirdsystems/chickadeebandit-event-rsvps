@@ -3,7 +3,7 @@ import {
   canCreateEvent, canManageEvent,
   isUpcoming, deadlinePassed,
   myRsvp, rsvpCounts, totalAttendees,
-  buildReminderNotification, summarizeReminderDelivery,
+  buildReminderNotification, summarizeReminderDelivery, searchableFields,
 } from "../src/logic.js";
 
 const ADULT = { id: "a1", name: "Alice", role: "adult" };
@@ -170,5 +170,13 @@ describe("summarizeReminderDelivery", () => {
       2,
     );
     expect(message).toBe("Reminder sent to 2 devices for 2 non-responders.");
+  });
+});
+
+describe("searchableFields", () => {
+  it("matches on the location and description, not just the title", () => {
+    const fields = searchableFields({ title: "AGM", description: "budget vote", location: "Clubhouse" });
+    expect(fields).toContain("Clubhouse");
+    expect(fields).toContain("budget vote");
   });
 });

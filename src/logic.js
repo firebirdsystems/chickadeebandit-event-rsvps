@@ -74,3 +74,12 @@ export function summarizeReminderDelivery(result, nonResponderCount) {
   }
   return `Reminder sent to ${sent} device${sent === 1 ? "" : "s"} for ${nonResponderCount} non-responder${nonResponderCount === 1 ? "" : "s"}.`;
 }
+
+/**
+ * Fields the in-app search matches against (see hub-sdk `searchMatch`).
+ * Description and location count as well as the title — an event is
+ * looked up by where it is at least as often as by what it is called.
+ */
+export function searchableFields(item) {
+  return [item.title, item.description, item.location];
+}
