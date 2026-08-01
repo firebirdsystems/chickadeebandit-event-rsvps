@@ -117,6 +117,21 @@
   "publishes": ["event.created", "event.cancelled", "event.rsvp_submitted"],
   "alert_on": ["event.created", "event.rsvp_submitted"],
   "nav": { "label": "RSVPs" },
+  "agenda": {
+    "kind": "event",
+    "label": "Event",
+    "source": {
+      "kind": "sql",
+      "query": "SELECT id AS id, title AS title, NULLIF(location, '') AS subtitle, event_date AS when_at FROM app_event_rsvps__events WHERE substr(event_date, 1, 10) = :today AND cancelled = 0 LIMIT 20"
+    }
+  },
+  "glance": {
+    "source": {
+      "kind": "sql",
+      "query": "SELECT title AS title, NULLIF(location, '') AS subtitle, event_date AS at FROM app_event_rsvps__events WHERE cancelled = 0 AND substr(event_date, 1, 10) >= :today ORDER BY event_date LIMIT 3"
+    },
+    "display": { "template": "list", "title": "title", "subtitle": "subtitle", "when": "at" }
+  },
   "resource_limits": {
     "max_db_bytes": 52428800
   },
