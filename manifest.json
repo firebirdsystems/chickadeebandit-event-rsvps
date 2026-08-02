@@ -17,6 +17,53 @@
     "requires_approval": false
   },
   "storage": "db",
+  "automation_actions": {
+    "create_event": {
+      "title": "Open an RSVP sheet",
+      "description": "Create an event and start collecting RSVPs when another app's event fires - a meeting scheduled, a potluck planned, a workday called.",
+      "params": {
+        "created_by": {
+          "type": "member",
+          "label": "Organiser",
+          "required": true
+        },
+        "title": {
+          "type": "text",
+          "label": "Event title",
+          "required": true
+        },
+        "event_date": {
+          "type": "text",
+          "label": "Date (YYYY-MM-DD, usually mapped from the triggering event)",
+          "required": true
+        },
+        "location": {
+          "type": "text",
+          "label": "Where",
+          "default": ""
+        }
+      },
+      "dedupe": {
+        "table": "events",
+        "column": "source_event_id"
+      },
+      "steps": [
+        {
+          "op": "insert",
+          "table": "events",
+          "values": {
+            "id": "$uuid",
+            "title": ":title",
+            "event_date": ":event_date",
+            "location": ":location",
+            "created_by": ":created_by",
+            "created_at": "$now",
+            "source_event_id": "$event_id"
+          }
+        }
+      ]
+    }
+  },
   "row_policies": {
     "events": {
       "kind": "adult_writable",
