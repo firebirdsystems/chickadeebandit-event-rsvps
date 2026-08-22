@@ -38,6 +38,47 @@
           "expect": { "status": 200, "rowCount": 2 }
         }
       ]
+    },
+    {
+      "name": "an adult can remove a link RSVP; a child can read it but not touch it",
+      "members": { "host": "adult", "kid": "child" },
+      "steps": [
+        {
+          "action": "seedRaw",
+          "sql": "INSERT INTO app_event_rsvps__events (id, title, event_date, created_by, created_at) VALUES (?, ?, ?, ?, ?)",
+          "params": ["ev1", "Open House", "2026-08-01", "{{host}}", "2026-07-01T00:00:00Z"]
+        },
+        {
+          "action": "seedRaw",
+          "sql": "INSERT INTO app_event_rsvps__guest_rsvps (id, event_id, guest_name, guest_count, status, source, created_at) VALUES ('g1', 'ev1', 'Sam Chen', 4, 'going', 'external', '2026-07-02T00:00:00Z'), ('g2', 'ev1', 'Sam Chen', 2, 'going', 'external', '2026-07-03T00:00:00Z')"
+        },
+        {
+          "action": "db",
+          "as": "kid",
+          "sql": "SELECT id FROM app_event_rsvps__guest_rsvps WHERE event_id = ?",
+          "params": ["ev1"],
+          "expect": { "status": 200, "rowCount": 2 }
+        },
+        {
+          "action": "db",
+          "as": "kid",
+          "sql": "DELETE FROM app_event_rsvps__guest_rsvps WHERE id = 'g1'",
+          "expect": { "status": 403 }
+        },
+        {
+          "action": "db",
+          "as": "host",
+          "sql": "DELETE FROM app_event_rsvps__guest_rsvps WHERE id = 'g1'",
+          "expect": { "status": 200 }
+        },
+        {
+          "action": "db",
+          "as": "host",
+          "sql": "SELECT guest_count FROM app_event_rsvps__guest_rsvps WHERE event_id = ?",
+          "params": ["ev1"],
+          "expect": { "status": 200, "rowCount": 1, "rowsContain": [{ "guest_count": 2 }] }
+        }
+      ]
     }
   ]
 }

@@ -58,6 +58,54 @@ describe("manifest.json", () => {
       { table: "guest_rsvps", foreign_key: "event_id" },
     ]);
   });
+
+  // Link RSVPs were `endpoint_only`, which denies every app-originated write —
+  // so a duplicate submission (the share-submit path only inserts, and has no
+  // identity to dedupe on) was permanent, and the public headcount aggregate,
+  // a SUM over guest_count, could only ever climb. `adult_writable` gives the
+  // organiser a delete. It also opens INSERT and UPDATE on externally-authored
+  // rows, which is acceptable here and would not be on a ballot: the same
+  // adults already own the parent `events` row under an identical policy, so
+  // forging or rewriting outside attendance grants no authority they lack —
+  // unlike a poll, where a forged outside vote decides something. Because those
+  // writes now touch rows the household did NOT author (and the CSV export
+  // labels them "shared link"), `audit_writes` keeps a hub-side trail the
+  // writer cannot erase — the app's own `activity` table is owner_only with
+  // adults_bypass, so it is no trail at all.
+  //
+  // `steward_reads_only` is load-bearing, not decoration: without it,
+  // `steward_writes_only` makes the hub classify this table as a steward
+  // broadcast — safe for every roster participant to read — but share
+  // submissions bypass the write lock, so the rows are externally authored
+  // names and headcounts, not steward content.
+  //
+  // It must be THIS modifier and not a member_read_column over a never-filled
+  // column: that collapses reads in every tenant kind, so a non-admin adult
+  // organiser in a general shared space (where steward_writes_only is inert
+  // and any adult may create and share an event) could not see or export
+  // responses to their own link. steward_reads_only is roster-gated, so the
+  // household and general-space organisers keep their data and only roster
+  // peers are excluded.
+  it("lets the organiser remove a link RSVP, hidden from roster peers only", () => {
+    expect(manifest.row_policies.guest_rsvps).toEqual({
+      kind: "adult_writable",
+      steward_writes_only: true,
+      steward_reads_only: true,
+      audit_writes: true,
+      max_rows: 200,
+    });
+    // No member-shaped column on this table at all, so nothing to declare —
+    // and nothing for an external submission to steer a read scope with.
+    expect(manifest.member_references.guest_rsvps).toBeUndefined();
+  });
+
+  it("keeps the public headcount and the in-app one on the same rule", () => {
+    // The share page's aggregate sums `guest_count` over 'going' rows; the app's
+    // own guestTotals() does the same. If one ever counted 'maybe' the organiser
+    // and the visitors would read different numbers off the same table.
+    const agg = manifest.shareable.event.aggregates.find(a => a.table === "guest_rsvps");
+    expect(agg).toMatchObject({ op: "sum", value_column: "guest_count", where_values: ["going"] });
+  });
 });
 
 // ── ai_access SQL file validation ─────────────────────────────────────────────

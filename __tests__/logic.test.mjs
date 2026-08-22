@@ -3,6 +3,7 @@ import {
   canCreateEvent, canManageEvent,
   isUpcoming, deadlinePassed,
   myRsvp, rsvpCounts, totalAttendees,
+  guestRsvpsFor, guestTotals, duplicateGuestNames, csvCell, normalizeTimestamp,
   buildReminderNotification, summarizeReminderDelivery, searchableFields,
 } from "../src/logic.js";
 
@@ -178,5 +179,152 @@ describe("searchableFields", () => {
     const fields = searchableFields({ title: "AGM", description: "budget vote", location: "Clubhouse" });
     expect(fields).toContain("Clubhouse");
     expect(fields).toContain("budget vote");
+  });
+});
+
+// ── RSVPs from a share link ───────────────────────────────────────────────────
+// A link submission is anonymous and insert-only: there is no identity to
+// dedupe on and no update lane, so a visitor correcting their own answer
+// arrives as a SECOND row. These helpers exist so the organiser can see that
+// and fix the headcount by hand, which is the only fix available.
+const GUESTS = [
+  { id: "g1", event_id: "e1", guest_name: "Sam Chen",   guest_count: 4, status: "going", created_at: "2026-08-01T10:00:00Z" },
+  { id: "g2", event_id: "e1", guest_name: "sam chen",   guest_count: 2, status: "going", created_at: "2026-08-03T10:00:00Z" },
+  { id: "g3", event_id: "e1", guest_name: "Priya Nair", guest_count: 1, status: "maybe", created_at: "2026-08-02T10:00:00Z" },
+  { id: "g4", event_id: "e2", guest_name: "Dana Lee",   guest_count: 3, status: "going", created_at: "2026-08-02T10:00:00Z" },
+];
+
+describe("guestRsvpsFor", () => {
+  it("keeps one event's rows, newest first", () => {
+    expect(guestRsvpsFor("e1", GUESTS).map(g => g.id)).toEqual(["g2", "g3", "g1"]);
+  });
+
+  it("does not mutate the array it was given", () => {
+    const order = GUESTS.map(g => g.id);
+    guestRsvpsFor("e1", GUESTS);
+    expect(GUESTS.map(g => g.id)).toEqual(order);
+  });
+
+  it("is empty for an event nobody responded to", () => {
+    expect(guestRsvpsFor("e9", GUESTS)).toEqual([]);
+  });
+});
+
+describe("guestTotals", () => {
+  it("counts heads from 'going' rows only, matching the public aggregate", () => {
+    // 4 + 2 — the duplicate is counted, because nothing can tell it apart from
+    // two real households replying. That inflation is the thing the organiser
+    // is being shown so they can correct it.
+    expect(guestTotals("e1", GUESTS)).toEqual({ submissions: 3, going: 2, maybe: 1, heads: 6 });
+  });
+
+  it("treats a missing or unparseable count as nobody", () => {
+    const rows = [{ event_id: "e1", status: "going" }, { event_id: "e1", status: "going", guest_count: "x" }];
+    expect(guestTotals("e1", rows).heads).toBe(0);
+  });
+
+  it("is all zeroes when no one used the link", () => {
+    expect(guestTotals("e9", GUESTS)).toEqual({ submissions: 0, going: 0, maybe: 0, heads: 0 });
+  });
+});
+
+describe("duplicateGuestNames", () => {
+  it("flags a name that responded twice, ignoring case and padding", () => {
+    expect([...duplicateGuestNames("e1", GUESTS)]).toEqual(["sam chen"]);
+  });
+
+  it("does not flag a name that responded once", () => {
+    expect(duplicateGuestNames("e1", GUESTS).has("priya nair")).toBe(false);
+  });
+
+  it("never flags unnamed submissions as each other's duplicates", () => {
+    // Two people who left the name blank are not evidence of one person
+    // answering twice, and pairing them would send the organiser deleting a
+    // real RSVP.
+    const rows = [
+      { event_id: "e1", guest_name: "",   guest_count: 1, status: "going" },
+      { event_id: "e1", guest_name: "  ", guest_count: 1, status: "going" },
+    ];
+    expect(duplicateGuestNames("e1", rows).size).toBe(0);
+  });
+
+  it("scopes duplicates to one event", () => {
+    const rows = [
+      { event_id: "e1", guest_name: "Dana Lee", guest_count: 1, status: "going" },
+      { event_id: "e2", guest_name: "Dana Lee", guest_count: 1, status: "going" },
+    ];
+    expect(duplicateGuestNames("e1", rows).size).toBe(0);
+  });
+});
+
+// ── CSV export safety ─────────────────────────────────────────────────────────
+// `guest_name` arrives from an unauthenticated share form and lands in a file
+// the organiser opens in Excel/Sheets. Quoting is NOT a defence: a quoted
+// field starting with a formula lead-in is still handed to the formula parser.
+// Mirrors the hub's own export guard (cloudflare/reports.ts) character for
+// character — one product must not neutralise the same attack two ways.
+describe("normalizeTimestamp", () => {
+  it("rewrites SQLite's datetime('now') shape into the ISO UTC instant it is", () => {
+    // guest_rsvps.created_at defaults to datetime('now') → space-separated,
+    // zone-less. Parsed raw, JS treats it as LOCAL time (off by the viewer's
+    // UTC offset — a different calendar day for evening submissions).
+    expect(normalizeTimestamp("2026-08-22 01:30:00")).toBe("2026-08-22T01:30:00Z");
+    expect(new Date(normalizeTimestamp("2026-08-22 01:30:00")).getTime())
+      .toBe(Date.UTC(2026, 7, 22, 1, 30, 0));
+  });
+
+  it("passes app-written ISO timestamps and non-strings through untouched", () => {
+    expect(normalizeTimestamp("2026-08-22T01:30:00Z")).toBe("2026-08-22T01:30:00Z");
+    expect(normalizeTimestamp("2026-08-22")).toBe("2026-08-22");
+    expect(normalizeTimestamp(null)).toBe(null);
+    expect(normalizeTimestamp(undefined)).toBe(undefined);
+  });
+});
+
+describe("csvCell", () => {
+  it("neutralises every formula lead-in a spreadsheet acts on", () => {
+    expect(csvCell("=1+1")).toBe("'=1+1");
+    expect(csvCell("+1")).toBe("'+1");
+    expect(csvCell("@SUM(A1)")).toBe("'@SUM(A1)");
+    // Excel strips a leading tab/CR before parsing, so they smuggle a formula
+    // past a naive "starts with =" check.
+    expect(csvCell("\t=cmd")).toBe("'\t=cmd");   // tab needs no CSV quoting
+    expect(csvCell("\r=cmd")).toBe('"\'\r=cmd"');
+  });
+
+  it("defuses the canonical command-execution payload", () => {
+    // The classic DDE payload. Quoting alone would have shipped it live.
+    const payload = `=cmd|' /C calc'!A0`;
+    const cell = csvCell(payload);
+    expect(cell.startsWith("'") || cell.startsWith(`"'`)).toBe(true);
+    expect(cell).not.toMatch(/^"?=/);
+  });
+
+  it("still quotes and escapes what CSV itself requires", () => {
+    expect(csvCell('He said "hi"')).toBe('"He said ""hi"""');
+    expect(csvCell("Smith, Dana")).toBe('"Smith, Dana"');
+    expect(csvCell("line1\nline2")).toBe('"line1\nline2"');
+    // A dangerous cell needs BOTH: the apostrophe and the comma quoting.
+    expect(csvCell("=A1,B2")).toBe(`"'=A1,B2"`);
+  });
+
+  it("leaves ordinary values untouched", () => {
+    expect(csvCell("Priya Nair")).toBe("Priya Nair");
+    expect(csvCell("going")).toBe("going");
+    expect(csvCell("4")).toBe("4");
+  });
+
+  it("renders absent values as an empty cell, never 'null'", () => {
+    expect(csvCell(null)).toBe("");
+    expect(csvCell(undefined)).toBe("");
+    expect(csvCell(0)).toBe("0");
+  });
+
+  it("guards a hyphen-leading name, accepting the cost to negative numbers", () => {
+    // "-Anne" is a plausible name and "-5" a plausible note; both come back as
+    // text. That is the deliberate trade the hub's rule already makes — a
+    // divergent numeric exemption here would be a second rule to keep in sync.
+    expect(csvCell("-Anne")).toBe("'-Anne");
+    expect(csvCell("-5")).toBe("'-5");
   });
 });

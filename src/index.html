@@ -345,6 +345,19 @@
       background: var(--surface, var(--card, #fff)); color: var(--text, inherit);
     }
     .search-input:focus { outline: none; border-color: var(--accent, #6366f1); }
+
+    /* ── Link RSVPs ─────────────────────────────────────────── */
+    .guest-list { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; }
+    .guest-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 7px 10px; border-radius: 8px;
+      border: 1px solid var(--border, #e5e7eb);
+      font-size: 0.86rem;
+    }
+    .guest-row.dupe { border-color: var(--amber, #f59e0b); }
+    .guest-name { font-weight: 600; }
+    .guest-meta { color: var(--muted); font-size: 0.8rem; }
+    .guest-remove { margin-left: auto; }
   </style>
   <base href="/run/event-rsvps/">
 </head>
@@ -359,6 +372,7 @@ import {
   canCreateEvent, canManageEvent, isAdult,
   isUpcoming, deadlinePassed,
   myRsvp, rsvpCounts, totalAttendees,
+  guestRsvpsFor, guestTotals, duplicateGuestNames, csvCell, normalizeTimestamp,
   buildReminderNotification, summarizeReminderDelivery, searchableFields,
 } from "./logic.js";
 
@@ -382,6 +396,7 @@ let members        = [];
 let memberMap      = new Map();
 let events         = [];
 let rsvps          = [];
+let guestRsvps     = [];  // submitted through a share link; no member behind them
 let ME             = null;  // resolved after loadMembers
 let currentEventId = null;
 let listTab        = "upcoming";
@@ -442,6 +457,14 @@ async function loadRsvps() {
     `SELECT * FROM app_event_rsvps__rsvps`
   );
   rsvps = rows;
+}
+
+async function loadGuestRsvps() {
+  if (!DB_URL) return;
+  const { rows } = await db(
+    `SELECT * FROM app_event_rsvps__guest_rsvps`
+  );
+  guestRsvps = rows;
 }
 
 // ─── Actions ──────────────────────────────────────────────────────────────────
@@ -575,11 +598,42 @@ async function sendReminders(eventId) {
   hubAlert(summarizeReminderDelivery(result, reminder.audience.length));
 }
 
+// Removing a guest RSVP. The submit path only inserts and has no identity to
+// dedupe on, so a visitor who corrects their own answer leaves a stale row
+// behind and the headcount over-reads. This is the only way to take one back —
+// which is why `guest_rsvps` is `adult_writable` rather than `endpoint_only`.
+async function deleteGuestRsvp(id, eventId) {
+  if (!canSteward(ME)) return;
+  const row = guestRsvps.find(g => g.id === id);
+  if (!row) return;
+  const ok = await hubConfirm({
+    message: `Remove ${row.guest_name || "this"} RSVP?`,
+    description: "It came in through the shared link. Removing it lowers the headcount and cannot be undone — the visitor is not told, and they can submit again.",
+    confirmLabel: "Remove",
+    destructive: true,
+  });
+  if (!ok) return;
+
+  const previous = guestRsvps;
+  guestRsvps = guestRsvps.filter(g => g.id !== id);
+  render();
+  try {
+    await db(`DELETE FROM app_event_rsvps__guest_rsvps WHERE id = ?`, [id]);
+  } catch (e) {
+    guestRsvps = previous;
+    render();
+    hubAlert(`Could not remove that RSVP: ${e.message}`);
+    return;
+  }
+  logActivity(eventId, "guest_rsvp_removed", `${ME?.name ?? "Someone"} removed a link RSVP from ${row.guest_name || "an unnamed visitor"}`)
+    .catch(() => {});
+}
+
 function exportCsv(eventId) {
   const ev = events.find(e => e.id === eventId);
   if (!ev) return;
   const eventRsvps = rsvps.filter(r => r.event_id === eventId);
-  const rows = [["Name", "Status", "Guests", "Note"]];
+  const rows = [["Name", "Status", "Guests", "Note", "Source"]];
   for (const m of members) {
     const r = eventRsvps.find(r => r.member_id === m.id);
     rows.push([
@@ -587,9 +641,26 @@ function exportCsv(eventId) {
       r ? r.status : "no response",
       r ? String(r.guest_count) : "0",
       r ? (r.note ?? "") : "",
+      "member",
     ]);
   }
-  const csv  = rows.map(r => r.map(c => `"${c.replace(/"/g, '""')}"`).join(",")).join("\n");
+  // Link RSVPs are exported as their own rows, tagged — the caterer needs the
+  // total, and the organiser needs to see which half of it nobody can vouch for.
+  for (const g of guestRsvpsFor(eventId, guestRsvps)) {
+    rows.push([
+      g.guest_name ?? "",
+      g.status ?? "",
+      String(g.guest_count ?? 0),
+      "",
+      "shared link",
+    ]);
+  }
+  // Every cell goes through csvCell — not just the guest ones. A member's note
+  // is typed by a household member rather than the internet, but the organiser
+  // opening the file cannot tell which column a payload came from, and a rule
+  // applied to only some columns is one refactor away from being applied to
+  // none of them.
+  const csv  = rows.map(r => r.map(csvCell).join(",")).join("\r\n");
   const blob = new Blob([csv], { type: "text/csv" });
   const a    = document.createElement("a");
   a.href     = URL.createObjectURL(blob);
@@ -654,7 +725,8 @@ function fmtDateTime(iso) {
 
 function fmtDateShort(iso) {
   if (!iso) return "";
-  const d   = new Date(iso);
+  // Guest rows' created_at is SQLite's space-separated UTC default, not ISO.
+  const d   = new Date(normalizeTimestamp(iso));
   const now = new Date();
   const opts = { month: "short", day: "numeric" };
   if (d.getFullYear() !== now.getFullYear()) opts.year = "numeric";
@@ -1072,6 +1144,52 @@ function renderDetail(ev) {
     </div>
   `;
 
+  // ── RSVPs from the shared link ──
+  // Kept in their own section, never folded into the member counts above: these
+  // are anonymous submissions, and an organiser reading a catering number needs
+  // to know which part of it is people the household can actually name.
+  const linkRows  = guestRsvpsFor(ev.id, guestRsvps);
+  const linkTotal = guestTotals(ev.id, guestRsvps);
+  const dupes     = duplicateGuestNames(ev.id, guestRsvps);
+  const guestSection = linkRows.length === 0 ? "" : `
+    <div class="breakdown-section">
+      <div class="section-label">From the shared link</div>
+      <div class="breakdown-group">
+        <div class="breakdown-label">
+          <span class="dot dot-yes"></span>${linkTotal.heads} coming
+          <span style="font-weight:400;color:var(--muted)">
+            · ${linkTotal.going} response${linkTotal.going === 1 ? "" : "s"}${linkTotal.maybe ? ` · ${linkTotal.maybe} maybe` : ""}
+          </span>
+        </div>
+        ${dupes.size > 0 ? `
+          <div class="info-banner" style="margin:8px 0">
+            Some names responded more than once. A link RSVP can't be edited, so a
+            correction arrives as a second row — remove the stale one to fix the count.
+          </div>
+        ` : ""}
+        <div class="guest-list">
+          ${linkRows.map(g => {
+            const name = (g.guest_name ?? "").trim();
+            const dupe = name && dupes.has(name.toLowerCase());
+            return `
+              <div class="guest-row${dupe ? " dupe" : ""}">
+                <span class="guest-name">${esc(name || "Unnamed visitor")}</span>
+                <span class="guest-meta">
+                  ${g.status === "maybe" ? "maybe · " : ""}${Number(g.guest_count) || 0} ${Number(g.guest_count) === 1 ? "person" : "people"}
+                  ${g.created_at ? ` · ${fmtDateShort(g.created_at)}` : ""}
+                </span>
+                ${canSteward(ME) ? `
+                  <button class="btn btn-ghost btn-sm guest-remove"
+                    data-action="delete-guest" data-id="${esc(g.id)}" data-event-id="${esc(ev.id)}">Remove</button>
+                ` : ""}
+              </div>
+            `;
+          }).join("")}
+        </div>
+      </div>
+    </div>
+  `;
+
   // External sharing is adult-gated (hub enforces role + household policy), not
   // manager-gated: any adult may pass a public link along. Cancelled events are
   // excluded to match the manifest's visible_where gate on the public page.
@@ -1109,6 +1227,7 @@ function renderDetail(ev) {
 
     ${rsvpSection}
     ${attendeesSection}
+    ${guestSection}
     ${actionsBar}
 
     <div style="text-align:center;margin-top:16px">
@@ -1209,6 +1328,14 @@ function loadDemoData() {
     { id: "dr7", event_id: "demo-e3", member_id: "demo-4", status: "yes",   guest_count: 0, note: "",                     updated_at: now.toISOString() },
     { id: "dr8", event_id: "demo-e3", member_id: "demo-5", status: "yes",   guest_count: 0, note: "",                     updated_at: now.toISOString() },
   ];
+
+  // Two rows from "Sam Chen" on purpose: that is what a correction looks like
+  // through a share link, and the demo should show the reconcile affordance.
+  guestRsvps = [
+    { id: "dg1", event_id: "demo-e1", guest_name: "Sam Chen",    guest_count: 4, status: "going", source: "external", created_at: new Date(now.getTime() - 2 * 86400000).toISOString() },
+    { id: "dg2", event_id: "demo-e1", guest_name: "Sam Chen",    guest_count: 2, status: "going", source: "external", created_at: new Date(now.getTime() - 1 * 86400000).toISOString() },
+    { id: "dg3", event_id: "demo-e1", guest_name: "Priya Nair",  guest_count: 1, status: "maybe", source: "external", created_at: new Date(now.getTime() - 3 * 86400000).toISOString() },
+  ];
 }
 
 // ─── Delegated click handling ─────────────────────────────────────────────────
@@ -1232,6 +1359,7 @@ document.addEventListener("click", (e) => {
     case "create-share":   createShare(id); break;
     case "copy-share":     copyShare(id); break;
     case "revoke-share":   revokeShare(id, el.dataset.eventId ?? ""); break;
+    case "delete-guest":   deleteGuestRsvp(id, el.dataset.eventId ?? ""); break;
   }
 });
 
@@ -1248,7 +1376,7 @@ document.addEventListener("click", (e) => {
   if (!DB_URL) {
     loadDemoData();
   } else {
-    await Promise.all([loadEvents(), loadRsvps()]);
+    await Promise.all([loadEvents(), loadRsvps(), loadGuestRsvps()]);
   }
 
   render();

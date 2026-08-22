@@ -1,8 +1,8 @@
 {
   "id": "event-rsvps",
   "name": "Event RSVPs",
-  "version": "1.0.0",
-  "description": "Create org events and collect RSVPs — who's coming, headcount for catering, send reminders to non-responders, export attendee lists.",
+  "version": "1.1.0",
+  "description": "Create org events and collect RSVPs — who's coming, headcount for catering, send reminders to non-responders, export attendee lists. An event can be shared by link so people outside the household can RSVP without an account.",
   "entrypoint": "index.html",
   "runtime": "static",
   "category": "general",
@@ -97,8 +97,10 @@
       "retain_days": { "default": 365, "timestamp_column": "created_at", "override_key": "activity_history" }
     },
     "guest_rsvps": {
-      "kind": "endpoint_only",
-      "read": "everyone",
+      "kind": "adult_writable",
+      "steward_writes_only": true,
+      "steward_reads_only": true,
+      "audit_writes": true,
       "max_rows": 200
     }
   },
