@@ -495,7 +495,7 @@ async function createEvent(data) {
       "all",
       `/open/${APP_ID}?eventId=${encodeURIComponent(id)}`
     ),
-    publishEvent("event.created", id, data.title),
+    publishEvent("event.created", id, { title: data.title, event_date: localDateKey(data.event_date) }),
   ]);
 
   closeModal();
@@ -540,7 +540,7 @@ async function cancelEvent(id) {
   await Promise.all([
     logActivity(id, "event_cancelled", ev?.title ?? ""),
     postHubActivity("event_cancelled", `${ME?.name ?? "Someone"} cancelled: "${ev?.title}"`, id),
-    publishEvent("event.cancelled", id, ev?.title ?? ""),
+    publishEvent("event.cancelled", id, { title: ev?.title ?? "" }),
   ]);
 
   currentEventId = null;
@@ -696,7 +696,7 @@ async function sendNotification(title, body, audience = "all", url = `/open/${AP
   return sendHubNotification({ title, body, audience, url });
 }
 
-function publishEvent(type, eventId, title) {
+function publishEvent(type, eventId, payload) {
   if (!DB_URL) return;
   fetch(EVENTS_URL, {
     method: "POST",
@@ -705,9 +705,21 @@ function publishEvent(type, eventId, title) {
       source_app_id: APP_ID,
       type,
       subject_id: eventId,
-      payload: { title },
+      payload,
     }),
   }).catch(() => {});
+}
+
+// The day an event falls on, as the app itself shows it. event_date is stored
+// as a UTC instant, so slicing its ISO string would push a 7pm event west of
+// UTC onto tomorrow — and a calendar rule fed that value would put the entry on
+// the wrong day. Read the local parts instead, the same ones fmtDateTime uses.
+function localDateKey(iso) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const pad = n => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 }
 
 // ─── Date formatting ──────────────────────────────────────────────────────────

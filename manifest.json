@@ -1,7 +1,7 @@
 {
   "id": "event-rsvps",
   "name": "Event RSVPs",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "description": "Create org events and collect RSVPs — who's coming, headcount for catering, send reminders to non-responders, export attendee lists. An event can be shared by link so people outside the household can RSVP without an account.",
   "entrypoint": "index.html",
   "runtime": "static",
