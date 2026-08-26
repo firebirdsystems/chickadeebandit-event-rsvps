@@ -17,6 +17,10 @@
     "requires_approval": false
   },
   "storage": "db",
+  "preload": {
+    "events": {"sql": "SELECT * FROM app_event_rsvps__events ORDER BY event_date ASC"},
+    "rsvps": {"sql": "SELECT * FROM app_event_rsvps__rsvps"}
+  },
   "automation_actions": {
     "create_event": {
       "title": "Open an RSVP sheet",
