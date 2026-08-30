@@ -1,0 +1,25 @@
+{
+  "scenarios": [
+    {
+      "name": "the event management bar renders for an adult and not for a child",
+      "members": { "parent": "adult", "kid": "child" },
+      "steps": [
+        { "action": "seedRaw",
+          "sql": "INSERT INTO app_event_rsvps__events (id, title, location, event_date, created_by, created_at) VALUES ('er-event', ?, ?, '2027-06-15T18:00:00Z', ?, '2026-08-01T09:00:00Z')",
+          "params": ["Block party", "The green", "{{parent}}"] },
+
+        { "action": "open", "as": "kid" },
+        { "action": "expectVisible", "as": "kid", "selector": "[data-testid=\"event-card\"][data-event-id=\"er-event\"]" },
+        { "action": "click", "as": "kid", "selector": "[data-testid=\"event-card\"][data-event-id=\"er-event\"]" },
+        { "action": "expectVisible", "as": "kid", "selector": "[data-testid=\"event-detail\"][data-event-id=\"er-event\"]" },
+        { "action": "expectCount", "as": "kid", "selector": "[data-testid=\"event-actions\"][data-event-id=\"er-event\"]", "count": 0 },
+
+        { "action": "open", "as": "parent" },
+        { "action": "expectVisible", "as": "parent", "selector": "[data-testid=\"event-card\"][data-event-id=\"er-event\"]" },
+        { "action": "click", "as": "parent", "selector": "[data-testid=\"event-card\"][data-event-id=\"er-event\"]" },
+        { "action": "expectVisible", "as": "parent", "selector": "[data-testid=\"event-detail\"][data-event-id=\"er-event\"]" },
+        { "action": "expectVisible", "as": "parent", "selector": "[data-testid=\"event-actions\"][data-event-id=\"er-event\"]" }
+      ]
+    }
+  ]
+}

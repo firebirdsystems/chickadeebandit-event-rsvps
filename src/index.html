@@ -1003,7 +1003,7 @@ document.addEventListener("input", (e) => {
 function renderEventCard(ev) {
   const deadlinePast = deadlinePassed(ev);
   return `
-    <div class="event-card ${ev.cancelled ? "cancelled" : ""}" data-action="open-event" data-id="${esc(ev.id)}">
+    <div class="event-card ${ev.cancelled ? "cancelled" : ""}" data-testid="event-card" data-event-id="${esc(ev.id)}" data-action="open-event" data-id="${esc(ev.id)}">
       <div class="event-card-inner">
         <div class="event-card-top">
           <div>
@@ -1193,7 +1193,7 @@ function renderDetail(ev) {
     ? `<button class="btn btn-ghost btn-sm" data-action="share-event" data-id="${esc(ev.id)}">🔗 Share</button>`
     : "";
   const actionsBar = canManage && !cancelled ? `
-    <div class="actions-bar">
+    <div class="actions-bar" data-testid="event-actions" data-event-id="${esc(ev.id)}">
       <button class="btn btn-ghost btn-sm" data-action="edit-event" data-id="${esc(ev.id)}">✏️ Edit</button>
       ${shareBtn}
       <button class="btn btn-ghost btn-sm" data-action="send-reminders" data-id="${esc(ev.id)}">🔔 Send Reminders</button>
@@ -1206,7 +1206,7 @@ function renderDetail(ev) {
   document.getElementById("root").innerHTML = `
     <button class="back-btn" onclick="backToList()">← All Events</button>
 
-    <div class="event-detail-header">
+    <div class="event-detail-header" data-testid="event-detail" data-event-id="${esc(ev.id)}">
       ${cancelled ? `<div class="cancelled-banner">This event was cancelled.</div>` : ""}
       <div class="event-detail-title">${esc(ev.title)}</div>
       <div class="event-detail-meta">
