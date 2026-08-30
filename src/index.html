@@ -488,7 +488,6 @@ async function createEvent(data) {
 
   await Promise.all([
     logActivity(id, "event_created", data.title),
-    postHubActivity("event_created", `${ME?.name ?? "Someone"} created a new event: "${data.title}"`, id),
     sendNotification(
       `New event: ${data.title}`,
       `${ME?.name ?? "Someone"} added a new event — RSVP now!`,
@@ -539,7 +538,6 @@ async function cancelEvent(id) {
 
   await Promise.all([
     logActivity(id, "event_cancelled", ev?.title ?? ""),
-    postHubActivity("event_cancelled", `${ME?.name ?? "Someone"} cancelled: "${ev?.title}"`, id),
     publishEvent("event.cancelled", id, { title: ev?.title ?? "" }),
   ]);
 
@@ -675,20 +673,6 @@ async function logActivity(recordId, action, detail = "") {
     `INSERT INTO app_event_rsvps__activity (id, record_id, actor_id, action, detail, created_at) VALUES (?, ?, ?, ?, ?, ?)`,
     [id, recordId, ME?.id ?? "system", action, detail, new Date().toISOString()]
   );
-}
-
-function postHubActivity(type, description, eventId) {
-  if (!DB_URL) return Promise.resolve();
-  return fetch(window.__ACTIVITY_URL ?? "/api/activity", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      type,
-      actor: ME?.name ?? "System",
-      description,
-      metadata: { deepLink: { appId: APP_ID, params: { eventId } } },
-    }),
-  }).catch(() => {});
 }
 
 async function sendNotification(title, body, audience = "all", url = `/open/${APP_ID}`) {
