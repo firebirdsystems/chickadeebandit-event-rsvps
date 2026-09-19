@@ -16,13 +16,13 @@
       --muted:        var(--hub-text-muted, #6b7280);
       --accent:       var(--hub-primary, #111827);
       --accent-hover: var(--hub-primary-hover, #374151);
-      --accent-light: #f3f4f6;
-      --green:        #059669;
-      --green-light:  #d1fae5;
-      --red:          #dc2626;
-      --red-light:    #fee2e2;
-      --amber:        #d97706;
-      --amber-light:  #fef3c7;
+      --accent-light: var(--bg);
+      --green:        var(--hub-tint-success-fg, #059669);
+      --green-light:  var(--hub-tint-success, #d1fae5);
+      --red:          var(--hub-tint-danger-fg, #dc2626);
+      --red-light:    var(--hub-tint-danger, #fee2e2);
+      --amber:        var(--hub-tint-warning-fg, #d97706);
+      --amber-light:  var(--hub-tint-warning, #fef3c7);
       --radius:       var(--hub-radius, 0.5rem);
       --shadow:       0 1px 3px rgba(0,0,0,.07);
       --shadow-md:    0 4px 12px rgba(0,0,0,.1);
@@ -101,7 +101,7 @@
       background: transparent;
       transition: all .15s;
     }
-    .tab.active { background: white; color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,.1); }
+    .tab.active { background: var(--card); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,.1); }
 
     /* ── Event cards ────────────────────────────────────────── */
     .event-card {
@@ -143,7 +143,7 @@
     .chip-yes   { background: var(--green-light); color: var(--green); }
     .chip-maybe { background: var(--amber-light); color: var(--amber); }
     .chip-no    { background: var(--red-light);   color: var(--red); }
-    .chip-none  { background: #f1f5f9; color: var(--muted); }
+    .chip-none  { background: var(--bg); color: var(--muted); }
 
     /* ── Badges ─────────────────────────────────────────────── */
     .badge {
@@ -156,8 +156,8 @@
     .badge-yes       { background: var(--green-light); color: var(--green); }
     .badge-maybe     { background: var(--amber-light); color: var(--amber); }
     .badge-no        { background: var(--red-light);   color: var(--red); }
-    .badge-none      { background: #f1f5f9; color: var(--muted); }
-    .badge-cancelled { background: #f1f5f9; color: var(--muted); }
+    .badge-none      { background: var(--bg); color: var(--muted); }
+    .badge-cancelled { background: var(--bg); color: var(--muted); }
 
     .card-footer-notes { display: flex; flex-direction: column; gap: 2px; margin-top: 6px; }
     .headcount-note { font-size: 0.75rem; color: var(--muted); }
@@ -195,7 +195,7 @@
       font-size: 0.88rem; color: var(--text); line-height: 1.55;
     }
     .cancelled-banner {
-      background: #f1f5f9; border: 1px dashed #cbd5e1; border-radius: 8px;
+      background: var(--bg); border: 1px dashed #cbd5e1; border-radius: 8px;
       padding: 8px 12px; font-size: 0.82rem; color: var(--muted);
       margin-bottom: 10px; text-align: center;
     }
@@ -253,7 +253,7 @@
       background: var(--accent-light); border-radius: 20px;
       padding: 2px 8px 2px 3px;
     }
-    .attendee-chip.muted { background: #f1f5f9; color: var(--muted); }
+    .attendee-chip.muted { background: var(--bg); color: var(--muted); }
 
     /* ── Avatar ─────────────────────────────────────────────── */
     .avatar-sm {
