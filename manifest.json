@@ -38,6 +38,7 @@
         },
         "event_date": {
           "type": "text",
+          "format": "date",
           "label": "Date (YYYY-MM-DD, usually mapped from the triggering event)",
           "required": true
         },
