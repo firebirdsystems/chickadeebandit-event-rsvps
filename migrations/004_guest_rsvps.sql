@@ -1,5 +1,5 @@
--- External guest RSVPs, submitted through a writable share link (premium
--- `sharing`). Kept in a DEDICATED table, separate from member `rsvps`: external
+-- External guest RSVPs, submitted through a writable share link (the
+-- `sharing` capability). Kept in a DEDICATED table, separate from member `rsvps`: external
 -- rows have no member identity, so they must not collide with the member-scoped
 -- row policies / UNIQUE(event_id, member_id) on `rsvps`.
 --

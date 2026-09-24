@@ -802,7 +802,7 @@ function openCreateEventModal(existingId = null) {
 // ─── Share links ──────────────────────────────────────────────────────────────
 let _shareLinks = []; // last-fetched links, for copy-by-id lookups
 
-let _shareEntitled = false; // premium `sharing` capability, from last status()
+let _shareEntitled = false; // `sharing` capability, from last status()
 
 async function openShareModal(eventId) {
   const ev = events.find(e => e.id === eventId);
@@ -828,9 +828,9 @@ async function openShareModal(eventId) {
         data-action="revoke-share" data-id="${esc(l.id)}" data-event-id="${esc(eventId)}">Revoke</button>
     </div>`).join("");
 
-  // Premium (`sharing`) controls: writable guest RSVPs, password, long expiry.
+  // `sharing` controls: writable guest RSVPs, password, long expiry.
   // Shown only to entitled households; no in-app upsell for now.
-  const premiumControls = _shareEntitled ? `
+  const sharingControls = _shareEntitled ? `
     <label style="display:flex;gap:6px;align-items:center;font-size:0.85rem;margin-top:10px">
       <input type="checkbox" id="share-writable" /> Let guests RSVP through this link
     </label>
@@ -845,7 +845,7 @@ async function openShareModal(eventId) {
       needed. Links expire automatically.
     </p>
     ${rows || `<p style="font-size:0.85rem;color:var(--muted);padding:8px 0">No active links yet.</p>`}
-    ${premiumControls}
+    ${sharingControls}
     <div style="display:flex;gap:8px;align-items:center;margin-top:14px">
       <select id="share-expiry" style="padding:6px;border:1px solid var(--border);border-radius:6px;background:var(--bg);font-size:0.85rem">
         ${SHARE_EXPIRY_CHOICES.map(({ hours, label }) =>
