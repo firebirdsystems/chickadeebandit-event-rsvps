@@ -19,6 +19,20 @@ export function deadlinePassed(event) {
   return new Date(event.rsvp_deadline) < new Date();
 }
 
+/**
+ * When the share link stops taking guest RSVPs (`guest_rsvps_close_at`, the
+ * share item's `until_column`): the RSVP deadline when the event has one, else
+ * the event's own start. The earlier of the two if a deadline was set after the
+ * event — a guest RSVP for an event that has already begun is no use to anyone.
+ */
+export function guestRsvpsCloseAt(eventDate, rsvpDeadline) {
+  if (!rsvpDeadline) return eventDate;
+  const deadline = new Date(rsvpDeadline).getTime();
+  if (!Number.isFinite(deadline)) return eventDate;
+  const start = new Date(eventDate).getTime();
+  return Number.isFinite(start) && start < deadline ? eventDate : rsvpDeadline;
+}
+
 export function myRsvp(eventId, rsvps, memberId) {
   return rsvps.find(r => r.event_id === eventId && r.member_id === memberId) ?? null;
 }

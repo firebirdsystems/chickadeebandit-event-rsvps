@@ -77,4 +77,25 @@ describe("share-link guest submissions", () => {
   it("marks guest rows as external", () => {
     expect(submit.fixed_values).toMatchObject({ source: "external" });
   });
+  // The link stops taking guest RSVPs at the event's RSVP deadline (else its
+  // start) while the page stays readable. Without this a guest could RSVP to an
+  // event days after it happened. `rsvp_deadline` itself is encrypted, and the
+  // hub compares the cutoff in the clear — hence a plaintext `_at` column.
+  it("closes guest RSVPs at the event's own cutoff column", () => {
+    expect(submit.until_column).toBe("guest_rsvps_close_at");
+    expect(columnsOf(manifest.shareable[itemType].table)).toContain(submit.until_column);
+    expect(submit.until_column.endsWith("_at")).toBe(true);
+    expect(submit.until_grace_minutes).toBeUndefined();
+  });
+
+  it("gives automation-created events a cutoff too", () => {
+    // The create_event action writes its date-only event_date, which the hub
+    // reads as the end of that household day.
+    const insert = manifest.automation_actions.create_event.steps.find((s) => s.op === "insert" && s.table === "events");
+    expect(insert.values.guest_rsvps_close_at).toBe(":event_date");
+  });
+
+  it("backfills existing events from their start, the only plaintext date a migration can read", () => {
+    expect(schema).toMatch(/UPDATE app_event_rsvps__events SET guest_rsvps_close_at = event_date WHERE guest_rsvps_close_at IS NULL/);
+  });
 });

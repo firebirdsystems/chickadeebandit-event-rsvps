@@ -370,7 +370,7 @@
 import { hubAlert, memberColor, initial, esc, hubConfirm, sendHubNotification, createShareHelper, searchMatch, activeShareLinks, SHARE_EXPIRY_CHOICES, DEFAULT_SHARE_EXPIRY_HOURS } from "/hub-sdk.js";
 import {
   canCreateEvent, canManageEvent, isAdult,
-  isUpcoming, deadlinePassed,
+  isUpcoming, deadlinePassed, guestRsvpsCloseAt,
   myRsvp, rsvpCounts, totalAttendees,
   guestRsvpsFor, guestTotals, duplicateGuestNames, csvCell, normalizeTimestamp,
   buildReminderNotification, summarizeReminderDelivery, searchableFields,
@@ -480,10 +480,11 @@ async function createEvent(data) {
   events.push(newEvent);
 
   await db(
-    `INSERT INTO app_event_rsvps__events (id, title, description, location, event_date, rsvp_deadline, headcount, created_by, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO app_event_rsvps__events (id, title, description, location, event_date, rsvp_deadline, guest_rsvps_close_at, headcount, created_by, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [id, data.title, data.description, data.location, data.event_date,
-     data.rsvp_deadline || null, data.headcount || null, ME?.id ?? "system", now]
+     data.rsvp_deadline || null, guestRsvpsCloseAt(data.event_date, data.rsvp_deadline),
+     data.headcount || null, ME?.id ?? "system", now]
   );
 
   await Promise.all([
@@ -515,9 +516,10 @@ async function updateEvent(id, data) {
   }
 
   await db(
-    `UPDATE app_event_rsvps__events SET title=?, description=?, location=?, event_date=?, rsvp_deadline=?, headcount=? WHERE id=?`,
+    `UPDATE app_event_rsvps__events SET title=?, description=?, location=?, event_date=?, rsvp_deadline=?, guest_rsvps_close_at=?, headcount=? WHERE id=?`,
     [data.title, data.description, data.location, data.event_date,
-     data.rsvp_deadline || null, data.headcount || null, id]
+     data.rsvp_deadline || null, guestRsvpsCloseAt(data.event_date, data.rsvp_deadline),
+     data.headcount || null, id]
   );
 
   closeModal();

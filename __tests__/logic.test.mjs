@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   canCreateEvent, canManageEvent,
-  isUpcoming, deadlinePassed,
+  isUpcoming, deadlinePassed, guestRsvpsCloseAt,
   myRsvp, rsvpCounts, totalAttendees,
   guestRsvpsFor, guestTotals, duplicateGuestNames, csvCell, normalizeTimestamp,
   buildReminderNotification, summarizeReminderDelivery, searchableFields,
@@ -53,6 +53,16 @@ describe("deadlinePassed", () => {
   it("no deadline => false",     () => expect(deadlinePassed({ rsvp_deadline: null })).toBe(false));
   it("past deadline => true",    () => expect(deadlinePassed({ rsvp_deadline: PAST })).toBe(true));
   it("future deadline => false", () => expect(deadlinePassed({ rsvp_deadline: FUTURE })).toBe(false));
+});
+
+describe("guestRsvpsCloseAt", () => {
+  const START = "2027-06-15T18:00:00.000Z";
+  it("no deadline => the event's start",          () => expect(guestRsvpsCloseAt(START, null)).toBe(START));
+  it("empty deadline => the event's start",       () => expect(guestRsvpsCloseAt(START, "")).toBe(START));
+  it("deadline before the event => the deadline", () => expect(guestRsvpsCloseAt(START, "2027-06-10T12:00:00.000Z")).toBe("2027-06-10T12:00:00.000Z"));
+  it("deadline after the event => the start",     () => expect(guestRsvpsCloseAt(START, "2027-06-16T12:00:00.000Z")).toBe(START));
+  it("unparseable deadline => the start",         () => expect(guestRsvpsCloseAt(START, "soon")).toBe(START));
+  it("unparseable start keeps a real deadline",   () => expect(guestRsvpsCloseAt("", "2027-06-10T12:00:00.000Z")).toBe("2027-06-10T12:00:00.000Z"));
 });
 
 // ── myRsvp ────────────────────────────────────────────────────────────────────

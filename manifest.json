@@ -60,6 +60,7 @@
             "id": "$uuid",
             "title": ":title",
             "event_date": ":event_date",
+            "guest_rsvps_close_at": ":event_date",
             "location": ":location",
             "created_by": ":created_by",
             "created_at": "$now",
@@ -163,6 +164,7 @@
           { "column": "status", "label": "Will you attend?", "type": "select", "required": true, "values": ["going", "maybe"] }
         ],
         "fixed_values": { "source": "external" },
+        "until_column": "guest_rsvps_close_at",
         "max_submissions": 200,
         "event": "event.rsvp_submitted"
       }
