@@ -336,7 +336,7 @@
 
     /* ── Empty / Loading ────────────────────────────────────── */
     .empty { text-align: center; padding: 48px 16px; color: var(--muted); }
-    .empty-icon { font-size: 2.5rem; margin-bottom: 10px; }
+    .empty-icon { margin-bottom: 10px; }
     .loading { text-align: center; padding: 48px; color: var(--muted); }
     .search-row { margin-bottom: 12px; }
     .search-input {
@@ -367,7 +367,7 @@
 </div>
 
 <script type="module">
-import { hubAlert, memberColor, initial, esc, hubConfirm, sendHubNotification, createShareHelper, searchMatch, activeShareLinks, SHARE_EXPIRY_CHOICES, DEFAULT_SHARE_EXPIRY_HOURS } from "/hub-sdk.js";
+import { hubAlert, memberColor, initial, esc, hubConfirm, sendHubNotification, createShareHelper, searchMatch, activeShareLinks, SHARE_EXPIRY_CHOICES, DEFAULT_SHARE_EXPIRY_HOURS, glyph, chickadee } from "/hub-sdk.js";
 import {
   canCreateEvent, canManageEvent, isAdult,
   isUpcoming, deadlinePassed, guestRsvpsCloseAt,
@@ -822,7 +822,7 @@ async function openShareModal(eventId) {
         <div style="font-size:0.75rem;color:var(--muted);margin-top:3px">
           Expires ${new Date(l.expiresAt).toLocaleDateString()} · ${l.viewCount} view${l.viewCount === 1 ? "" : "s"}${
             l.writable ? ` · ${l.submissionCount} guest RSVP${l.submissionCount === 1 ? "" : "s"}` : ""}${
-            l.hasPassword ? " · 🔒 password" : ""}${l.writable ? " · ✍️ collects RSVPs" : ""}
+            l.hasPassword ? ` · ${glyph("lock")} password` : ""}${l.writable ? ` · ${glyph("pencil")} collects RSVPs` : ""}
         </div>
       </div>
       <button class="btn btn-ghost btn-sm" data-action="copy-share" data-id="${esc(l.id)}">Copy</button>
@@ -934,9 +934,9 @@ function showErr(el, msg) { el.textContent = msg; el.style.display = "block"; }
 function renderRsvpChips(eventId) {
   const c = rsvpCounts(eventId, rsvps, members);
   const parts = [];
-  if (c.yes.length)        parts.push(`<span class="chip chip-yes">✓ ${c.yes.length} going</span>`);
+  if (c.yes.length)        parts.push(`<span class="chip chip-yes">${glyph("tick", { accent: "currentColor" })} ${c.yes.length} going</span>`);
   if (c.maybe.length)      parts.push(`<span class="chip chip-maybe">? ${c.maybe.length} maybe</span>`);
-  if (c.no.length)         parts.push(`<span class="chip chip-no">✗ ${c.no.length} not going</span>`);
+  if (c.no.length)         parts.push(`<span class="chip chip-no">${glyph("close", { accent: "currentColor" })} ${c.no.length} not going</span>`);
   if (c.noResponse.length) parts.push(`<span class="chip chip-none">— ${c.noResponse.length} no response</span>`);
   return parts.length ? `<div class="rsvp-chips">${parts.join("")}</div>` : "";
 }
@@ -975,9 +975,9 @@ function renderList() {
     ${events.length ? `<div class="search-row"><input id="search" class="search-input" type="search" placeholder="Search events…" aria-label="Search events" value="${esc(searchQ)}" /></div>` : ""}
     <div id="event-list">${showing.length === 0
       ? (searchQ
-        ? `<div class="empty"><div class="empty-icon">🔍</div><p>No events match "${esc(searchQ)}".</p></div>`
+        ? `<div class="empty"><div class="empty-icon">${chickadee("searching")}</div><p>No events match "${esc(searchQ)}".</p></div>`
         : `<div class="empty">
-           <div class="empty-icon">${listTab === "upcoming" ? "🎟️" : "📋"}</div>
+           <div class="empty-icon">${chickadee(listTab === "upcoming" ? "nest" : "sleeping")}</div>
            <p>${listTab === "upcoming"
              ? "No upcoming events." + (canCreate ? " Create one to get started!" : "")
              : "No past events."}</p>
@@ -1009,8 +1009,8 @@ function renderEventCard(ev) {
           <div>
             <div class="event-title">${esc(ev.title)}</div>
             <div class="event-meta">
-              <span>📅 ${fmtDateTime(ev.event_date)}</span>
-              ${ev.location ? `<span>📍 ${esc(ev.location)}</span>` : ""}
+              <span>${glyph("calendar")} ${fmtDateTime(ev.event_date)}</span>
+              ${ev.location ? `<span>${glyph("location")} ${esc(ev.location)}</span>` : ""}
             </div>
           </div>
           ${ev.cancelled
@@ -1053,9 +1053,9 @@ function renderDetail(ev) {
       <div class="rsvp-section">
         <div class="section-label" style="margin-bottom:10px">Your RSVP</div>
         <div class="rsvp-buttons">
-          <button class="rsvp-btn ${currentStatus === "yes"   ? "active-yes"   : ""}" onclick="selectRsvp('yes')">✓ Going</button>
+          <button class="rsvp-btn ${currentStatus === "yes"   ? "active-yes"   : ""}" onclick="selectRsvp('yes')">${glyph("tick", { accent: "currentColor" })} Going</button>
           <button class="rsvp-btn ${currentStatus === "maybe" ? "active-maybe" : ""}" onclick="selectRsvp('maybe')">? Maybe</button>
-          <button class="rsvp-btn ${currentStatus === "no"    ? "active-no"    : ""}" onclick="selectRsvp('no')">✗ Not Going</button>
+          <button class="rsvp-btn ${currentStatus === "no"    ? "active-no"    : ""}" onclick="selectRsvp('no')">${glyph("close", { accent: "currentColor" })} Not Going</button>
         </div>
         <div class="rsvp-extra" id="rsvp-extra" style="${currentStatus ? "" : "display:none"}">
           <div class="form-row" style="margin-top:12px">
@@ -1190,13 +1190,13 @@ function renderDetail(ev) {
   // manager-gated: any adult may pass a public link along. Cancelled events are
   // excluded to match the manifest's visible_where gate on the public page.
   const shareBtn = share.enabled && canSteward(ME) && !cancelled
-    ? `<button class="btn btn-ghost btn-sm" data-action="share-event" data-id="${esc(ev.id)}">🔗 Share</button>`
+    ? `<button class="btn btn-ghost btn-sm" data-action="share-event" data-id="${esc(ev.id)}">${glyph("link")} Share</button>`
     : "";
   const actionsBar = canManage && !cancelled ? `
     <div class="actions-bar" data-testid="event-actions" data-event-id="${esc(ev.id)}">
-      <button class="btn btn-ghost btn-sm" data-action="edit-event" data-id="${esc(ev.id)}">✏️ Edit</button>
+      <button class="btn btn-ghost btn-sm" data-action="edit-event" data-id="${esc(ev.id)}">${glyph("pencil")} Edit</button>
       ${shareBtn}
-      <button class="btn btn-ghost btn-sm" data-action="send-reminders" data-id="${esc(ev.id)}">🔔 Send Reminders</button>
+      <button class="btn btn-ghost btn-sm" data-action="send-reminders" data-id="${esc(ev.id)}">${glyph("bell")} Send Reminders</button>
       <button class="btn btn-ghost btn-sm" data-action="export" data-id="${esc(ev.id)}">⬇️ Export CSV</button>
       <button class="btn btn-ghost btn-sm" style="color:var(--red);border-color:var(--red);opacity:.8"
         data-action="cancel-event" data-id="${esc(ev.id)}">Cancel Event</button>
@@ -1210,8 +1210,8 @@ function renderDetail(ev) {
       ${cancelled ? `<div class="cancelled-banner">This event was cancelled.</div>` : ""}
       <div class="event-detail-title">${esc(ev.title)}</div>
       <div class="event-detail-meta">
-        <span>📅 ${fmtDateTime(ev.event_date)}</span>
-        ${ev.location ? `<span>📍 ${esc(ev.location)}</span>` : ""}
+        <span>${glyph("calendar")} ${fmtDateTime(ev.event_date)}</span>
+        ${ev.location ? `<span>${glyph("location")} ${esc(ev.location)}</span>` : ""}
         ${ev.rsvp_deadline ? `<span class="deadline-note ${deadlinePast ? "passed" : ""}">
           RSVP ${deadlinePast ? "closed" : "deadline"}: ${fmtDateTime(ev.rsvp_deadline)}
         </span>` : ""}
