@@ -1,0 +1,2265 @@
+{
+ "seed": [
+  {
+   "sql": "INSERT INTO app_event_rsvps__events (id, title, description, location, event_date, rsvp_deadline, guest_rsvps_close_at, headcount, created_by, created_at, cancelled) VALUES (?, ?, ?, ?, strftime('%Y-%m-%dT18:00:00Z','now','+0 days'), ?, strftime('%Y-%m-%dT00:00:00Z','now','-3 days'), ?, ?, strftime('%Y-%m-%dT09:30:00Z','now','-25 days'), ?)",
+   "params": [
+    "perf-ev-01",
+    "Block party",
+    "Please RSVP so we know how much food to order.",
+    "The green",
+    "{{date:-3}}",
+    80,
+    "{{me}}",
+    0
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__activity (id, record_id, actor_id, action, detail, created_at) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT09:30:00Z','now','-25 days'))",
+   "params": [
+    "perf-ea-01",
+    "perf-ev-01",
+    "{{me}}",
+    "event_created",
+    "Block party"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','-2 days'), ?)",
+   "params": [
+    "perf-rs-001",
+    "perf-ev-01",
+    "{{me}}",
+    "yes",
+    0,
+    "Might be 15 minutes late",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','-3 days'), ?)",
+   "params": [
+    "perf-rs-002",
+    "perf-ev-01",
+    "{{partner}}",
+    "maybe",
+    0,
+    "Can help set up",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','-4 days'), ?)",
+   "params": [
+    "perf-rs-003",
+    "perf-ev-01",
+    "{{adult2}}",
+    "yes",
+    0,
+    "Gluten-free for one of us",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','-5 days'), ?)",
+   "params": [
+    "perf-rs-004",
+    "perf-ev-01",
+    "{{child}}",
+    "no",
+    2,
+    "Leaving early for practice",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__guest_rsvps (id, event_id, guest_name, guest_count, status, source, created_at) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT12:40:00Z','now','-2 days'))",
+   "params": [
+    "perf-gr-01",
+    "perf-ev-01",
+    "The Okafor family",
+    2,
+    "going",
+    "external"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__guest_rsvps (id, event_id, guest_name, guest_count, status, source, created_at) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT12:40:00Z','now','-3 days'))",
+   "params": [
+    "perf-gr-02",
+    "perf-ev-01",
+    "Priya N.",
+    3,
+    "going",
+    "external"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__events (id, title, description, location, event_date, guest_rsvps_close_at, headcount, created_by, created_at, cancelled) VALUES (?, ?, ?, ?, strftime('%Y-%m-%dT09:00:00Z','now','+3 days'), strftime('%Y-%m-%dT09:00:00Z','now','+3 days'), ?, ?, strftime('%Y-%m-%dT09:30:00Z','now','-26 days'), ?)",
+   "params": [
+    "perf-ev-02",
+    "Neighbourhood cleanup morning",
+    "Everyone welcome. Bring a chair and something to share.",
+    "Meet at the mailboxes",
+    30,
+    "{{partner}}",
+    0
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, updated_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','-3 days'), ?)",
+   "params": [
+    "perf-rs-005",
+    "perf-ev-02",
+    "{{me}}",
+    "yes",
+    0,
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, updated_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','+0 days'), ?)",
+   "params": [
+    "perf-rs-006",
+    "perf-ev-02",
+    "{{adult2}}",
+    "yes",
+    0,
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, updated_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','+0 days'), ?)",
+   "params": [
+    "perf-rs-007",
+    "perf-ev-02",
+    "{{child}}",
+    "maybe",
+    0,
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','+0 days'), ?)",
+   "params": [
+    "perf-rs-008",
+    "perf-ev-02",
+    "{{child2}}",
+    "yes",
+    3,
+    "Bringing a salad",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__events (id, title, description, location, event_date, guest_rsvps_close_at, headcount, created_by, created_at, cancelled) VALUES (?, ?, ?, ?, strftime('%Y-%m-%dT19:00:00Z','now','+6 days'), strftime('%Y-%m-%dT19:00:00Z','now','+6 days'), ?, ?, strftime('%Y-%m-%dT09:30:00Z','now','-27 days'), ?)",
+   "params": [
+    "perf-ev-03",
+    "Grandma's 80th birthday dinner",
+    "Please RSVP so we know how much food to order.",
+    "Trattoria Lucca",
+    24,
+    "{{me}}",
+    0
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','+0 days'), ?)",
+   "params": [
+    "perf-rs-009",
+    "perf-ev-03",
+    "{{me}}",
+    "no",
+    0,
+    "Might be 15 minutes late",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','+0 days'), ?)",
+   "params": [
+    "perf-rs-010",
+    "perf-ev-03",
+    "{{partner}}",
+    "yes",
+    0,
+    "Can help set up",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','+0 days'), ?)",
+   "params": [
+    "perf-rs-011",
+    "perf-ev-03",
+    "{{adult2}}",
+    "yes",
+    0,
+    "Gluten-free for one of us",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','+0 days'), ?)",
+   "params": [
+    "perf-rs-012",
+    "perf-ev-03",
+    "{{child2}}",
+    "maybe",
+    1,
+    "Leaving early for practice",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__events (id, title, description, location, event_date, rsvp_deadline, guest_rsvps_close_at, headcount, created_by, created_at, cancelled) VALUES (?, ?, ?, ?, strftime('%Y-%m-%dT17:30:00Z','now','+9 days'), ?, strftime('%Y-%m-%dT00:00:00Z','now','+6 days'), ?, ?, strftime('%Y-%m-%dT09:30:00Z','now','-28 days'), ?)",
+   "params": [
+    "perf-ev-04",
+    "Fall potluck",
+    "Everyone welcome. Bring a chair and something to share.",
+    "Clubhouse",
+    "{{date:6}}",
+    60,
+    "{{adult2}}",
+    0
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, updated_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','+0 days'), ?)",
+   "params": [
+    "perf-rs-013",
+    "perf-ev-04",
+    "{{me}}",
+    "yes",
+    0,
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, updated_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','+0 days'), ?)",
+   "params": [
+    "perf-rs-014",
+    "perf-ev-04",
+    "{{partner}}",
+    "no",
+    0,
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, updated_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','+0 days'), ?)",
+   "params": [
+    "perf-rs-015",
+    "perf-ev-04",
+    "{{adult2}}",
+    "yes",
+    0,
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','+0 days'), ?)",
+   "params": [
+    "perf-rs-016",
+    "perf-ev-04",
+    "{{child}}",
+    "yes",
+    2,
+    "Bringing a salad",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','+0 days'), ?)",
+   "params": [
+    "perf-rs-017",
+    "perf-ev-04",
+    "{{child2}}",
+    "maybe",
+    0,
+    "Might be 15 minutes late",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__guest_rsvps (id, event_id, guest_name, guest_count, status, source, created_at) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT12:40:00Z','now','+0 days'))",
+   "params": [
+    "perf-gr-03",
+    "perf-ev-04",
+    "Marcus and Dee",
+    4,
+    "going",
+    "external"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__guest_rsvps (id, event_id, guest_name, guest_count, status, source, created_at) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT12:40:00Z','now','+0 days'))",
+   "params": [
+    "perf-gr-04",
+    "perf-ev-04",
+    "Aunt Carol",
+    1,
+    "going",
+    "external"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__guest_rsvps (id, event_id, guest_name, guest_count, status, source, created_at) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT12:40:00Z','now','+0 days'))",
+   "params": [
+    "perf-gr-05",
+    "perf-ev-04",
+    "Jonah's mum",
+    2,
+    "maybe",
+    "external"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__events (id, title, description, location, event_date, guest_rsvps_close_at, created_by, created_at, cancelled) VALUES (?, ?, ?, ?, strftime('%Y-%m-%dT10:00:00Z','now','+12 days'), strftime('%Y-%m-%dT10:00:00Z','now','+12 days'), ?, strftime('%Y-%m-%dT09:30:00Z','now','-29 days'), ?)",
+   "params": [
+    "perf-ev-05",
+    "School fundraiser bake sale",
+    "Please RSVP so we know how much food to order.",
+    "Lincoln Elementary gym",
+    "{{me}}",
+    0
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__activity (id, record_id, actor_id, action, detail, created_at) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT09:30:00Z','now','-29 days'))",
+   "params": [
+    "perf-ea-02",
+    "perf-ev-05",
+    "{{me}}",
+    "event_created",
+    "School fundraiser bake sale"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','+0 days'), ?)",
+   "params": [
+    "perf-rs-018",
+    "perf-ev-05",
+    "{{me}}",
+    "yes",
+    0,
+    "Can help set up",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','+0 days'), ?)",
+   "params": [
+    "perf-rs-019",
+    "perf-ev-05",
+    "{{partner}}",
+    "no",
+    0,
+    "Gluten-free for one of us",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','+0 days'), ?)",
+   "params": [
+    "perf-rs-020",
+    "perf-ev-05",
+    "{{child}}",
+    "yes",
+    3,
+    "Leaving early for practice",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, updated_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','+0 days'), ?)",
+   "params": [
+    "perf-rs-021",
+    "perf-ev-05",
+    "{{child2}}",
+    "yes",
+    0,
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__events (id, title, description, location, event_date, guest_rsvps_close_at, headcount, created_by, created_at, cancelled) VALUES (?, ?, ?, ?, strftime('%Y-%m-%dT19:30:00Z','now','+15 days'), strftime('%Y-%m-%dT19:30:00Z','now','+15 days'), ?, ?, strftime('%Y-%m-%dT09:30:00Z','now','-30 days'), ?)",
+   "params": [
+    "perf-ev-06",
+    "Book club: October pick",
+    "Everyone welcome. Bring a chair and something to share.",
+    "Our living room",
+    12,
+    "{{partner}}",
+    0
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, updated_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','+0 days'), ?)",
+   "params": [
+    "perf-rs-022",
+    "perf-ev-06",
+    "{{me}}",
+    "maybe",
+    0,
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, updated_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','+0 days'), ?)",
+   "params": [
+    "perf-rs-023",
+    "perf-ev-06",
+    "{{partner}}",
+    "yes",
+    0,
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__events (id, title, description, location, event_date, rsvp_deadline, guest_rsvps_close_at, headcount, created_by, created_at, cancelled) VALUES (?, ?, ?, ?, strftime('%Y-%m-%dT16:00:00Z','now','+19 days'), ?, strftime('%Y-%m-%dT00:00:00Z','now','+16 days'), ?, ?, strftime('%Y-%m-%dT09:30:00Z','now','-31 days'), ?)",
+   "params": [
+    "perf-ev-07",
+    "Pumpkin carving night",
+    "Please RSVP so we know how much food to order.",
+    "Back patio",
+    "{{date:16}}",
+    20,
+    "{{me}}",
+    0
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','+0 days'), ?)",
+   "params": [
+    "perf-rs-024",
+    "perf-ev-07",
+    "{{me}}",
+    "no",
+    1,
+    "Bringing a salad",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','+0 days'), ?)",
+   "params": [
+    "perf-rs-025",
+    "perf-ev-07",
+    "{{adult2}}",
+    "yes",
+    0,
+    "Might be 15 minutes late",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','+0 days'), ?)",
+   "params": [
+    "perf-rs-026",
+    "perf-ev-07",
+    "{{child}}",
+    "yes",
+    0,
+    "Can help set up",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','+0 days'), ?)",
+   "params": [
+    "perf-rs-027",
+    "perf-ev-07",
+    "{{child2}}",
+    "maybe",
+    0,
+    "Gluten-free for one of us",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__events (id, title, description, location, event_date, guest_rsvps_close_at, created_by, created_at, cancelled) VALUES (?, ?, ?, ?, strftime('%Y-%m-%dT17:00:00Z','now','+22 days'), strftime('%Y-%m-%dT17:00:00Z','now','+22 days'), ?, strftime('%Y-%m-%dT09:30:00Z','now','-25 days'), ?)",
+   "params": [
+    "perf-ev-08",
+    "Halloween street parade",
+    "Everyone welcome. Bring a chair and something to share.",
+    "Maple Street",
+    "{{adult2}}",
+    0
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','+0 days'), ?)",
+   "params": [
+    "perf-rs-028",
+    "perf-ev-08",
+    "{{me}}",
+    "yes",
+    2,
+    "Leaving early for practice",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, updated_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','+0 days'), ?)",
+   "params": [
+    "perf-rs-029",
+    "perf-ev-08",
+    "{{partner}}",
+    "no",
+    0,
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, updated_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','+0 days'), ?)",
+   "params": [
+    "perf-rs-030",
+    "perf-ev-08",
+    "{{adult2}}",
+    "yes",
+    0,
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, updated_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','+0 days'), ?)",
+   "params": [
+    "perf-rs-031",
+    "perf-ev-08",
+    "{{child2}}",
+    "yes",
+    0,
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__events (id, title, description, location, event_date, guest_rsvps_close_at, headcount, created_by, created_at, cancelled) VALUES (?, ?, ?, ?, strftime('%Y-%m-%dT12:00:00Z','now','+27 days'), strftime('%Y-%m-%dT12:00:00Z','now','+27 days'), ?, ?, strftime('%Y-%m-%dT09:30:00Z','now','-26 days'), ?)",
+   "params": [
+    "perf-ev-09",
+    "Soccer end-of-season party",
+    "Please RSVP so we know how much food to order.",
+    "Riverside Fields pavilion",
+    40,
+    "{{me}}",
+    0
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__activity (id, record_id, actor_id, action, detail, created_at) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT09:30:00Z','now','-26 days'))",
+   "params": [
+    "perf-ea-03",
+    "perf-ev-09",
+    "{{me}}",
+    "event_created",
+    "Soccer end-of-season party"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','+0 days'), ?)",
+   "params": [
+    "perf-rs-032",
+    "perf-ev-09",
+    "{{me}}",
+    "maybe",
+    3,
+    "Bringing a salad",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','+0 days'), ?)",
+   "params": [
+    "perf-rs-033",
+    "perf-ev-09",
+    "{{partner}}",
+    "yes",
+    0,
+    "Might be 15 minutes late",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','+0 days'), ?)",
+   "params": [
+    "perf-rs-034",
+    "perf-ev-09",
+    "{{adult2}}",
+    "no",
+    0,
+    "Can help set up",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','+0 days'), ?)",
+   "params": [
+    "perf-rs-035",
+    "perf-ev-09",
+    "{{child}}",
+    "yes",
+    0,
+    "Gluten-free for one of us",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','+0 days'), ?)",
+   "params": [
+    "perf-rs-036",
+    "perf-ev-09",
+    "{{child2}}",
+    "yes",
+    1,
+    "Leaving early for practice",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__guest_rsvps (id, event_id, guest_name, guest_count, status, source, created_at) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT12:40:00Z','now','+0 days'))",
+   "params": [
+    "perf-gr-06",
+    "perf-ev-09",
+    "The Lindqvists",
+    3,
+    "going",
+    "external"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__guest_rsvps (id, event_id, guest_name, guest_count, status, source, created_at) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT12:40:00Z','now','+0 days'))",
+   "params": [
+    "perf-gr-07",
+    "perf-ev-09",
+    "Coach Ramirez",
+    4,
+    "going",
+    "external"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__events (id, title, description, location, event_date, rsvp_deadline, guest_rsvps_close_at, headcount, created_by, created_at, cancelled) VALUES (?, ?, ?, ?, strftime('%Y-%m-%dT15:00:00Z','now','+38 days'), ?, strftime('%Y-%m-%dT00:00:00Z','now','+35 days'), ?, ?, strftime('%Y-%m-%dT09:30:00Z','now','-27 days'), ?)",
+   "params": [
+    "perf-ev-10",
+    "Friendsgiving",
+    "Everyone welcome. Bring a chair and something to share.",
+    "Our place",
+    "{{date:35}}",
+    16,
+    "{{partner}}",
+    0
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, updated_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','+0 days'), ?)",
+   "params": [
+    "perf-rs-037",
+    "perf-ev-10",
+    "{{me}}",
+    "maybe",
+    0,
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, updated_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','+0 days'), ?)",
+   "params": [
+    "perf-rs-038",
+    "perf-ev-10",
+    "{{partner}}",
+    "yes",
+    0,
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, updated_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','+0 days'), ?)",
+   "params": [
+    "perf-rs-039",
+    "perf-ev-10",
+    "{{child}}",
+    "no",
+    0,
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','+0 days'), ?)",
+   "params": [
+    "perf-rs-040",
+    "perf-ev-10",
+    "{{child2}}",
+    "yes",
+    2,
+    "Bringing a salad",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__events (id, title, description, location, event_date, guest_rsvps_close_at, headcount, created_by, created_at, cancelled) VALUES (?, ?, ?, ?, strftime('%Y-%m-%dT19:00:00Z','now','+45 days'), strftime('%Y-%m-%dT19:00:00Z','now','+45 days'), ?, ?, strftime('%Y-%m-%dT09:30:00Z','now','-28 days'), ?)",
+   "params": [
+    "perf-ev-11",
+    "Annual members meeting",
+    "Please RSVP so we know how much food to order.",
+    "Clubhouse main hall",
+    100,
+    "{{me}}",
+    0
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','+0 days'), ?)",
+   "params": [
+    "perf-rs-041",
+    "perf-ev-11",
+    "{{me}}",
+    "yes",
+    0,
+    "Might be 15 minutes late",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','+0 days'), ?)",
+   "params": [
+    "perf-rs-042",
+    "perf-ev-11",
+    "{{partner}}",
+    "maybe",
+    0,
+    "Can help set up",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','+0 days'), ?)",
+   "params": [
+    "perf-rs-043",
+    "perf-ev-11",
+    "{{adult2}}",
+    "yes",
+    0,
+    "Gluten-free for one of us",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','+0 days'), ?)",
+   "params": [
+    "perf-rs-044",
+    "perf-ev-11",
+    "{{child}}",
+    "no",
+    3,
+    "Leaving early for practice",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__guest_rsvps (id, event_id, guest_name, guest_count, status, source, created_at) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT12:40:00Z','now','+0 days'))",
+   "params": [
+    "perf-gr-08",
+    "perf-ev-11",
+    "Mrs. Abernathy",
+    1,
+    "going",
+    "external"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__guest_rsvps (id, event_id, guest_name, guest_count, status, source, created_at) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT12:40:00Z','now','+0 days'))",
+   "params": [
+    "perf-gr-09",
+    "perf-ev-11",
+    "Tomás",
+    2,
+    "going",
+    "external"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__events (id, title, description, location, event_date, guest_rsvps_close_at, headcount, created_by, created_at, cancelled) VALUES (?, ?, ?, ?, strftime('%Y-%m-%dT14:00:00Z','now','+62 days'), strftime('%Y-%m-%dT14:00:00Z','now','+62 days'), ?, ?, strftime('%Y-%m-%dT09:30:00Z','now','-29 days'), ?)",
+   "params": [
+    "perf-ev-12",
+    "Holiday cookie swap",
+    "Everyone welcome. Bring a chair and something to share.",
+    "Clubhouse kitchen",
+    25,
+    "{{adult2}}",
+    0
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__events (id, title, description, location, event_date, rsvp_deadline, guest_rsvps_close_at, headcount, created_by, created_at, cancelled) VALUES (?, ?, ?, ?, strftime('%Y-%m-%dT20:00:00Z','now','+83 days'), ?, strftime('%Y-%m-%dT00:00:00Z','now','+80 days'), ?, ?, strftime('%Y-%m-%dT09:30:00Z','now','-30 days'), ?)",
+   "params": [
+    "perf-ev-13",
+    "New Year's Eve open house",
+    "Please RSVP so we know how much food to order.",
+    "Our place",
+    "{{date:80}}",
+    35,
+    "{{me}}",
+    0
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__activity (id, record_id, actor_id, action, detail, created_at) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT09:30:00Z','now','-30 days'))",
+   "params": [
+    "perf-ea-04",
+    "perf-ev-13",
+    "{{me}}",
+    "event_created",
+    "New Year's Eve open house"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__events (id, title, description, location, event_date, guest_rsvps_close_at, headcount, created_by, created_at, cancelled) VALUES (?, ?, ?, ?, strftime('%Y-%m-%dT08:00:00Z','now','+110 days'), strftime('%Y-%m-%dT08:00:00Z','now','+110 days'), ?, ?, strftime('%Y-%m-%dT09:30:00Z','now','-31 days'), ?)",
+   "params": [
+    "perf-ev-14",
+    "Ski weekend",
+    "Everyone welcome. Bring a chair and something to share.",
+    "Pine Ridge Lodge",
+    10,
+    "{{partner}}",
+    0
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__events (id, title, description, location, event_date, guest_rsvps_close_at, headcount, created_by, created_at, cancelled) VALUES (?, ?, ?, ?, strftime('%Y-%m-%dT12:00:00Z','now','-8 days'), strftime('%Y-%m-%dT12:00:00Z','now','-8 days'), ?, ?, strftime('%Y-%m-%dT09:30:00Z','now','-33 days'), ?)",
+   "params": [
+    "perf-ev-15",
+    "Back-to-school picnic",
+    "Please RSVP so we know how much food to order.",
+    "Lakeside Park shelter 2",
+    50,
+    "{{me}}",
+    0
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, updated_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','-12 days'), ?)",
+   "params": [
+    "perf-rs-045",
+    "perf-ev-15",
+    "{{me}}",
+    "yes",
+    0,
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, updated_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','-13 days'), ?)",
+   "params": [
+    "perf-rs-046",
+    "perf-ev-15",
+    "{{partner}}",
+    "yes",
+    0,
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, updated_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','-14 days'), ?)",
+   "params": [
+    "perf-rs-047",
+    "perf-ev-15",
+    "{{child}}",
+    "maybe",
+    0,
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','-9 days'), ?)",
+   "params": [
+    "perf-rs-048",
+    "perf-ev-15",
+    "{{child2}}",
+    "yes",
+    1,
+    "Bringing a salad",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__guest_rsvps (id, event_id, guest_name, guest_count, status, source, created_at) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT12:40:00Z','now','-10 days'))",
+   "params": [
+    "perf-gr-10",
+    "perf-ev-15",
+    "Sam Chen",
+    3,
+    "maybe",
+    "external"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__guest_rsvps (id, event_id, guest_name, guest_count, status, source, created_at) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT12:40:00Z','now','-11 days'))",
+   "params": [
+    "perf-gr-11",
+    "perf-ev-15",
+    "The Okafor family",
+    4,
+    "going",
+    "external"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__events (id, title, description, location, event_date, rsvp_deadline, guest_rsvps_close_at, headcount, created_by, created_at, cancelled) VALUES (?, ?, ?, ?, strftime('%Y-%m-%dT13:00:00Z','now','-20 days'), ?, strftime('%Y-%m-%dT00:00:00Z','now','-23 days'), ?, ?, strftime('%Y-%m-%dT09:30:00Z','now','-46 days'), ?)",
+   "params": [
+    "perf-ev-16",
+    "End of summer pool party",
+    "Everyone welcome. Bring a chair and something to share.",
+    "Community pool",
+    "{{date:-23}}",
+    60,
+    "{{adult2}}",
+    0
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','-22 days'), ?)",
+   "params": [
+    "perf-rs-049",
+    "perf-ev-16",
+    "{{me}}",
+    "no",
+    0,
+    "Might be 15 minutes late",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','-23 days'), ?)",
+   "params": [
+    "perf-rs-050",
+    "perf-ev-16",
+    "{{partner}}",
+    "yes",
+    0,
+    "Can help set up",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','-24 days'), ?)",
+   "params": [
+    "perf-rs-051",
+    "perf-ev-16",
+    "{{adult2}}",
+    "yes",
+    0,
+    "Gluten-free for one of us",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','-25 days'), ?)",
+   "params": [
+    "perf-rs-052",
+    "perf-ev-16",
+    "{{child}}",
+    "maybe",
+    2,
+    "Leaving early for practice",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__guest_rsvps (id, event_id, guest_name, guest_count, status, source, created_at) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT12:40:00Z','now','-22 days'))",
+   "params": [
+    "perf-gr-12",
+    "perf-ev-16",
+    "Priya N.",
+    1,
+    "going",
+    "external"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__guest_rsvps (id, event_id, guest_name, guest_count, status, source, created_at) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT12:40:00Z','now','-23 days'))",
+   "params": [
+    "perf-gr-13",
+    "perf-ev-16",
+    "Marcus and Dee",
+    2,
+    "going",
+    "external"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__guest_rsvps (id, event_id, guest_name, guest_count, status, source, created_at) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT12:40:00Z','now','-24 days'))",
+   "params": [
+    "perf-gr-14",
+    "perf-ev-16",
+    "Aunt Carol",
+    3,
+    "going",
+    "external"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__events (id, title, description, location, event_date, guest_rsvps_close_at, created_by, created_at, cancelled) VALUES (?, ?, ?, ?, strftime('%Y-%m-%dT08:00:00Z','now','-33 days'), strftime('%Y-%m-%dT08:00:00Z','now','-33 days'), ?, strftime('%Y-%m-%dT09:30:00Z','now','-60 days'), ?)",
+   "params": [
+    "perf-ev-17",
+    "Garage sale weekend",
+    "Please RSVP so we know how much food to order.",
+    "Whole street",
+    "{{me}}",
+    0
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__activity (id, record_id, actor_id, action, detail, created_at) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT09:30:00Z','now','-60 days'))",
+   "params": [
+    "perf-ea-05",
+    "perf-ev-17",
+    "{{me}}",
+    "event_created",
+    "Garage sale weekend"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, updated_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','-39 days'), ?)",
+   "params": [
+    "perf-rs-053",
+    "perf-ev-17",
+    "{{me}}",
+    "yes",
+    0,
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, updated_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','-34 days'), ?)",
+   "params": [
+    "perf-rs-054",
+    "perf-ev-17",
+    "{{adult2}}",
+    "no",
+    0,
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, updated_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','-35 days'), ?)",
+   "params": [
+    "perf-rs-055",
+    "perf-ev-17",
+    "{{child}}",
+    "yes",
+    0,
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','-36 days'), ?)",
+   "params": [
+    "perf-rs-056",
+    "perf-ev-17",
+    "{{child2}}",
+    "yes",
+    3,
+    "Bringing a salad",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__events (id, title, description, location, event_date, guest_rsvps_close_at, headcount, created_by, created_at, cancelled) VALUES (?, ?, ?, ?, strftime('%Y-%m-%dT20:30:00Z','now','-41 days'), strftime('%Y-%m-%dT20:30:00Z','now','-41 days'), ?, ?, strftime('%Y-%m-%dT09:30:00Z','now','-69 days'), ?)",
+   "params": [
+    "perf-ev-18",
+    "Movie night under the stars",
+    "Everyone welcome. Bring a chair and something to share.",
+    "The green",
+    70,
+    "{{partner}}",
+    0
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','-45 days'), ?)",
+   "params": [
+    "perf-rs-057",
+    "perf-ev-18",
+    "{{me}}",
+    "maybe",
+    0,
+    "Might be 15 minutes late",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','-46 days'), ?)",
+   "params": [
+    "perf-rs-058",
+    "perf-ev-18",
+    "{{partner}}",
+    "yes",
+    0,
+    "Can help set up",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__guest_rsvps (id, event_id, guest_name, guest_count, status, source, created_at) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT12:40:00Z','now','-43 days'))",
+   "params": [
+    "perf-gr-15",
+    "perf-ev-18",
+    "Jonah's mum",
+    4,
+    "maybe",
+    "external"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__guest_rsvps (id, event_id, guest_name, guest_count, status, source, created_at) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT12:40:00Z','now','-44 days'))",
+   "params": [
+    "perf-gr-16",
+    "perf-ev-18",
+    "The Lindqvists",
+    1,
+    "going",
+    "external"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__guest_rsvps (id, event_id, guest_name, guest_count, status, source, created_at) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT12:40:00Z','now','-45 days'))",
+   "params": [
+    "perf-gr-17",
+    "perf-ev-18",
+    "Coach Ramirez",
+    2,
+    "going",
+    "external"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__events (id, title, description, location, event_date, rsvp_deadline, guest_rsvps_close_at, headcount, created_by, created_at, cancelled) VALUES (?, ?, ?, ?, strftime('%Y-%m-%dT12:30:00Z','now','-52 days'), ?, strftime('%Y-%m-%dT00:00:00Z','now','-55 days'), ?, ?, strftime('%Y-%m-%dT09:30:00Z','now','-81 days'), ?)",
+   "params": [
+    "perf-ev-19",
+    "Dad's retirement lunch",
+    "Please RSVP so we know how much food to order.",
+    "The Anchor Grill",
+    "{{date:-55}}",
+    18,
+    "{{me}}",
+    0
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','-58 days'), ?)",
+   "params": [
+    "perf-rs-059",
+    "perf-ev-19",
+    "{{me}}",
+    "no",
+    0,
+    "Gluten-free for one of us",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','-53 days'), ?)",
+   "params": [
+    "perf-rs-060",
+    "perf-ev-19",
+    "{{partner}}",
+    "yes",
+    1,
+    "Leaving early for practice",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, updated_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','-54 days'), ?)",
+   "params": [
+    "perf-rs-061",
+    "perf-ev-19",
+    "{{adult2}}",
+    "yes",
+    0,
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, updated_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','-55 days'), ?)",
+   "params": [
+    "perf-rs-062",
+    "perf-ev-19",
+    "{{child}}",
+    "maybe",
+    0,
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, updated_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','-56 days'), ?)",
+   "params": [
+    "perf-rs-063",
+    "perf-ev-19",
+    "{{child2}}",
+    "yes",
+    0,
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__events (id, title, description, location, event_date, guest_rsvps_close_at, headcount, created_by, created_at, cancelled) VALUES (?, ?, ?, ?, strftime('%Y-%m-%dT16:00:00Z','now','-97 days'), strftime('%Y-%m-%dT16:00:00Z','now','-97 days'), ?, ?, strftime('%Y-%m-%dT09:30:00Z','now','-127 days'), ?)",
+   "params": [
+    "perf-ev-20",
+    "Fourth of July cookout",
+    "Everyone welcome. Bring a chair and something to share.",
+    "Our backyard",
+    30,
+    "{{adult2}}",
+    0
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','-102 days'), ?)",
+   "params": [
+    "perf-rs-064",
+    "perf-ev-20",
+    "{{me}}",
+    "no",
+    2,
+    "Bringing a salad",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','-103 days'), ?)",
+   "params": [
+    "perf-rs-065",
+    "perf-ev-20",
+    "{{partner}}",
+    "yes",
+    0,
+    "Might be 15 minutes late",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','-98 days'), ?)",
+   "params": [
+    "perf-rs-066",
+    "perf-ev-20",
+    "{{child}}",
+    "yes",
+    0,
+    "Can help set up",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','-99 days'), ?)",
+   "params": [
+    "perf-rs-067",
+    "perf-ev-20",
+    "{{child2}}",
+    "maybe",
+    0,
+    "Gluten-free for one of us",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__events (id, title, description, location, event_date, guest_rsvps_close_at, headcount, created_by, created_at, cancelled) VALUES (?, ?, ?, ?, strftime('%Y-%m-%dT11:00:00Z','now','-110 days'), strftime('%Y-%m-%dT11:00:00Z','now','-110 days'), ?, ?, strftime('%Y-%m-%dT09:30:00Z','now','-141 days'), ?)",
+   "params": [
+    "perf-ev-21",
+    "Kid's birthday at the trampoline park",
+    "Please RSVP so we know how much food to order.",
+    "SkyBounce",
+    15,
+    "{{me}}",
+    0
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__activity (id, record_id, actor_id, action, detail, created_at) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT09:30:00Z','now','-141 days'))",
+   "params": [
+    "perf-ea-06",
+    "perf-ev-21",
+    "{{me}}",
+    "event_created",
+    "Kid's birthday at the trampoline park"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','-113 days'), ?)",
+   "params": [
+    "perf-rs-068",
+    "perf-ev-21",
+    "{{me}}",
+    "yes",
+    3,
+    "Leaving early for practice",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, updated_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','-114 days'), ?)",
+   "params": [
+    "perf-rs-069",
+    "perf-ev-21",
+    "{{partner}}",
+    "no",
+    0,
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, updated_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','-115 days'), ?)",
+   "params": [
+    "perf-rs-070",
+    "perf-ev-21",
+    "{{adult2}}",
+    "yes",
+    0,
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, updated_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','-116 days'), ?)",
+   "params": [
+    "perf-rs-071",
+    "perf-ev-21",
+    "{{child}}",
+    "yes",
+    0,
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__events (id, title, description, location, event_date, rsvp_deadline, guest_rsvps_close_at, headcount, created_by, created_at, cancelled) VALUES (?, ?, ?, ?, strftime('%Y-%m-%dT19:00:00Z','now','-111 days'), ?, strftime('%Y-%m-%dT00:00:00Z','now','-114 days'), ?, ?, strftime('%Y-%m-%dT09:30:00Z','now','-136 days'), ?)",
+   "params": [
+    "perf-ev-22",
+    "Summer solstice bonfire",
+    "Everyone welcome. Bring a chair and something to share.",
+    "Beach access 4",
+    "{{date:-114}}",
+    25,
+    "{{partner}}",
+    0
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','-112 days'), ?)",
+   "params": [
+    "perf-rs-072",
+    "perf-ev-22",
+    "{{me}}",
+    "maybe",
+    1,
+    "Bringing a salad",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','-113 days'), ?)",
+   "params": [
+    "perf-rs-073",
+    "perf-ev-22",
+    "{{adult2}}",
+    "yes",
+    0,
+    "Might be 15 minutes late",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','-114 days'), ?)",
+   "params": [
+    "perf-rs-074",
+    "perf-ev-22",
+    "{{child}}",
+    "no",
+    0,
+    "Can help set up",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','-115 days'), ?)",
+   "params": [
+    "perf-rs-075",
+    "perf-ev-22",
+    "{{child2}}",
+    "yes",
+    0,
+    "Gluten-free for one of us",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__events (id, title, description, location, event_date, guest_rsvps_close_at, headcount, created_by, created_at, cancelled) VALUES (?, ?, ?, ?, strftime('%Y-%m-%dT09:30:00Z','now','-150 days'), strftime('%Y-%m-%dT09:30:00Z','now','-150 days'), ?, ?, strftime('%Y-%m-%dT09:30:00Z','now','-176 days'), ?)",
+   "params": [
+    "perf-ev-23",
+    "Spring planting day",
+    "Please RSVP so we know how much food to order.",
+    "Community garden",
+    20,
+    "{{me}}",
+    0
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','-155 days'), ?)",
+   "params": [
+    "perf-rs-076",
+    "perf-ev-23",
+    "{{me}}",
+    "yes",
+    2,
+    "Leaving early for practice",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, updated_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','-156 days'), ?)",
+   "params": [
+    "perf-rs-077",
+    "perf-ev-23",
+    "{{partner}}",
+    "maybe",
+    0,
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, updated_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','-151 days'), ?)",
+   "params": [
+    "perf-rs-078",
+    "perf-ev-23",
+    "{{adult2}}",
+    "yes",
+    0,
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, updated_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','-152 days'), ?)",
+   "params": [
+    "perf-rs-079",
+    "perf-ev-23",
+    "{{child2}}",
+    "no",
+    0,
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__events (id, title, description, location, event_date, guest_rsvps_close_at, headcount, created_by, created_at, cancelled) VALUES (?, ?, ?, ?, strftime('%Y-%m-%dT14:00:00Z','now','-128 days'), strftime('%Y-%m-%dT14:00:00Z','now','-128 days'), ?, ?, strftime('%Y-%m-%dT09:30:00Z','now','-155 days'), ?)",
+   "params": [
+    "perf-ev-24",
+    "Graduation open house",
+    "Everyone welcome. Bring a chair and something to share.",
+    "Our place",
+    45,
+    "{{adult2}}",
+    0
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','-131 days'), ?)",
+   "params": [
+    "perf-rs-080",
+    "perf-ev-24",
+    "{{me}}",
+    "yes",
+    3,
+    "Bringing a salad",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','-132 days'), ?)",
+   "params": [
+    "perf-rs-081",
+    "perf-ev-24",
+    "{{partner}}",
+    "yes",
+    0,
+    "Might be 15 minutes late",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__guest_rsvps (id, event_id, guest_name, guest_count, status, source, created_at) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT12:40:00Z','now','-130 days'))",
+   "params": [
+    "perf-gr-18",
+    "perf-ev-24",
+    "Mrs. Abernathy",
+    3,
+    "going",
+    "external"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__guest_rsvps (id, event_id, guest_name, guest_count, status, source, created_at) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT12:40:00Z','now','-131 days'))",
+   "params": [
+    "perf-gr-19",
+    "perf-ev-24",
+    "Tomás",
+    4,
+    "going",
+    "external"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__guest_rsvps (id, event_id, guest_name, guest_count, status, source, created_at) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT12:40:00Z','now','-132 days'))",
+   "params": [
+    "perf-gr-20",
+    "perf-ev-24",
+    "Sam Chen",
+    1,
+    "maybe",
+    "external"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__events (id, title, description, location, event_date, rsvp_deadline, guest_rsvps_close_at, headcount, created_by, created_at, cancelled) VALUES (?, ?, ?, ?, strftime('%Y-%m-%dT10:30:00Z','now','-152 days'), ?, strftime('%Y-%m-%dT00:00:00Z','now','-155 days'), ?, ?, strftime('%Y-%m-%dT09:30:00Z','now','-180 days'), ?)",
+   "params": [
+    "perf-ev-25",
+    "Mother's Day brunch",
+    "Please RSVP so we know how much food to order.",
+    "Rosewood Cafe",
+    "{{date:-155}}",
+    10,
+    "{{me}}",
+    0
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__activity (id, record_id, actor_id, action, detail, created_at) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT09:30:00Z','now','-180 days'))",
+   "params": [
+    "perf-ea-07",
+    "perf-ev-25",
+    "{{me}}",
+    "event_created",
+    "Mother's Day brunch"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','-157 days'), ?)",
+   "params": [
+    "perf-rs-082",
+    "perf-ev-25",
+    "{{me}}",
+    "maybe",
+    0,
+    "Can help set up",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','-158 days'), ?)",
+   "params": [
+    "perf-rs-083",
+    "perf-ev-25",
+    "{{partner}}",
+    "yes",
+    0,
+    "Gluten-free for one of us",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','-153 days'), ?)",
+   "params": [
+    "perf-rs-084",
+    "perf-ev-25",
+    "{{child}}",
+    "no",
+    1,
+    "Leaving early for practice",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, updated_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','-154 days'), ?)",
+   "params": [
+    "perf-rs-085",
+    "perf-ev-25",
+    "{{child2}}",
+    "yes",
+    0,
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__events (id, title, description, location, event_date, guest_rsvps_close_at, headcount, created_by, created_at, cancelled) VALUES (?, ?, ?, ?, strftime('%Y-%m-%dT10:00:00Z','now','-180 days'), strftime('%Y-%m-%dT10:00:00Z','now','-180 days'), ?, ?, strftime('%Y-%m-%dT09:30:00Z','now','-209 days'), ?)",
+   "params": [
+    "perf-ev-26",
+    "Easter egg hunt",
+    "Everyone welcome. Bring a chair and something to share.",
+    "The green",
+    40,
+    "{{partner}}",
+    0
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, updated_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','-183 days'), ?)",
+   "params": [
+    "perf-rs-086",
+    "perf-ev-26",
+    "{{me}}",
+    "yes",
+    0,
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, updated_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','-184 days'), ?)",
+   "params": [
+    "perf-rs-087",
+    "perf-ev-26",
+    "{{partner}}",
+    "maybe",
+    0,
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','-185 days'), ?)",
+   "params": [
+    "perf-rs-088",
+    "perf-ev-26",
+    "{{adult2}}",
+    "yes",
+    2,
+    "Bringing a salad",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','-186 days'), ?)",
+   "params": [
+    "perf-rs-089",
+    "perf-ev-26",
+    "{{child}}",
+    "no",
+    0,
+    "Might be 15 minutes late",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__guest_rsvps (id, event_id, guest_name, guest_count, status, source, created_at) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT12:40:00Z','now','-182 days'))",
+   "params": [
+    "perf-gr-21",
+    "perf-ev-26",
+    "The Okafor family",
+    2,
+    "going",
+    "external"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__guest_rsvps (id, event_id, guest_name, guest_count, status, source, created_at) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT12:40:00Z','now','-183 days'))",
+   "params": [
+    "perf-gr-22",
+    "perf-ev-26",
+    "Priya N.",
+    3,
+    "going",
+    "external"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__guest_rsvps (id, event_id, guest_name, guest_count, status, source, created_at) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT12:40:00Z','now','-184 days'))",
+   "params": [
+    "perf-gr-23",
+    "perf-ev-26",
+    "Marcus and Dee",
+    4,
+    "going",
+    "external"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__events (id, title, description, location, event_date, guest_rsvps_close_at, headcount, created_by, created_at, cancelled) VALUES (?, ?, ?, ?, strftime('%Y-%m-%dT19:00:00Z','now','-195 days'), strftime('%Y-%m-%dT19:00:00Z','now','-195 days'), ?, ?, strftime('%Y-%m-%dT09:30:00Z','now','-225 days'), ?)",
+   "params": [
+    "perf-ev-27",
+    "Trivia night fundraiser",
+    "Please RSVP so we know how much food to order.",
+    "Clubhouse",
+    48,
+    "{{me}}",
+    0
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','-196 days'), ?)",
+   "params": [
+    "perf-rs-090",
+    "perf-ev-27",
+    "{{me}}",
+    "yes",
+    0,
+    "Can help set up",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','-197 days'), ?)",
+   "params": [
+    "perf-rs-091",
+    "perf-ev-27",
+    "{{adult2}}",
+    "yes",
+    0,
+    "Gluten-free for one of us",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','-198 days'), ?)",
+   "params": [
+    "perf-rs-092",
+    "perf-ev-27",
+    "{{child}}",
+    "maybe",
+    3,
+    "Leaving early for practice",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, updated_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','-199 days'), ?)",
+   "params": [
+    "perf-rs-093",
+    "perf-ev-27",
+    "{{child2}}",
+    "yes",
+    0,
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__guest_rsvps (id, event_id, guest_name, guest_count, status, source, created_at) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT12:40:00Z','now','-197 days'))",
+   "params": [
+    "perf-gr-24",
+    "perf-ev-27",
+    "Aunt Carol",
+    1,
+    "going",
+    "external"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__guest_rsvps (id, event_id, guest_name, guest_count, status, source, created_at) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT12:40:00Z','now','-198 days'))",
+   "params": [
+    "perf-gr-25",
+    "perf-ev-27",
+    "Jonah's mum",
+    2,
+    "maybe",
+    "external"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__events (id, title, description, location, event_date, rsvp_deadline, guest_rsvps_close_at, created_by, created_at, cancelled) VALUES (?, ?, ?, ?, strftime('%Y-%m-%dT11:00:00Z','now','-206 days'), ?, strftime('%Y-%m-%dT00:00:00Z','now','-209 days'), ?, strftime('%Y-%m-%dT09:30:00Z','now','-237 days'), ?)",
+   "params": [
+    "perf-ev-28",
+    "St. Patrick's parade meetup",
+    "Everyone welcome. Bring a chair and something to share.",
+    "Corner of 5th and Main",
+    "{{date:-209}}",
+    "{{adult2}}",
+    0
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, updated_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','-211 days'), ?)",
+   "params": [
+    "perf-rs-094",
+    "perf-ev-28",
+    "{{me}}",
+    "no",
+    0,
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, updated_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','-212 days'), ?)",
+   "params": [
+    "perf-rs-095",
+    "perf-ev-28",
+    "{{partner}}",
+    "yes",
+    0,
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','-207 days'), ?)",
+   "params": [
+    "perf-rs-096",
+    "perf-ev-28",
+    "{{adult2}}",
+    "yes",
+    1,
+    "Bringing a salad",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','-208 days'), ?)",
+   "params": [
+    "perf-rs-097",
+    "perf-ev-28",
+    "{{child2}}",
+    "maybe",
+    0,
+    "Might be 15 minutes late",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__events (id, title, description, location, event_date, guest_rsvps_close_at, headcount, created_by, created_at, cancelled) VALUES (?, ?, ?, ?, strftime('%Y-%m-%dT18:30:00Z','now','-225 days'), strftime('%Y-%m-%dT18:30:00Z','now','-225 days'), ?, ?, strftime('%Y-%m-%dT09:30:00Z','now','-250 days'), ?)",
+   "params": [
+    "perf-ev-29",
+    "Game night",
+    "Please RSVP so we know how much food to order.",
+    "Our living room",
+    8,
+    "{{me}}",
+    0
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__activity (id, record_id, actor_id, action, detail, created_at) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT09:30:00Z','now','-250 days'))",
+   "params": [
+    "perf-ea-08",
+    "perf-ev-29",
+    "{{me}}",
+    "event_created",
+    "Game night"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','-228 days'), ?)",
+   "params": [
+    "perf-rs-098",
+    "perf-ev-29",
+    "{{me}}",
+    "yes",
+    0,
+    "Can help set up",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','-229 days'), ?)",
+   "params": [
+    "perf-rs-099",
+    "perf-ev-29",
+    "{{partner}}",
+    "no",
+    0,
+    "Gluten-free for one of us",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','-230 days'), ?)",
+   "params": [
+    "perf-rs-100",
+    "perf-ev-29",
+    "{{adult2}}",
+    "yes",
+    2,
+    "Leaving early for practice",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, updated_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','-231 days'), ?)",
+   "params": [
+    "perf-rs-101",
+    "perf-ev-29",
+    "{{child}}",
+    "yes",
+    0,
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__events (id, title, description, location, event_date, guest_rsvps_close_at, headcount, created_by, created_at, cancelled) VALUES (?, ?, ?, ?, strftime('%Y-%m-%dT17:00:00Z','now','-238 days'), strftime('%Y-%m-%dT17:00:00Z','now','-238 days'), ?, ?, strftime('%Y-%m-%dT09:30:00Z','now','-264 days'), ?)",
+   "params": [
+    "perf-ev-30",
+    "Valentine's dance for the kids",
+    "Everyone welcome. Bring a chair and something to share.",
+    "School cafeteria",
+    80,
+    "{{partner}}",
+    0
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, updated_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','-239 days'), ?)",
+   "params": [
+    "perf-rs-102",
+    "perf-ev-30",
+    "{{me}}",
+    "maybe",
+    0,
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, updated_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','-240 days'), ?)",
+   "params": [
+    "perf-rs-103",
+    "perf-ev-30",
+    "{{partner}}",
+    "yes",
+    0,
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__guest_rsvps (id, event_id, guest_name, guest_count, status, source, created_at) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT12:40:00Z','now','-240 days'))",
+   "params": [
+    "perf-gr-26",
+    "perf-ev-30",
+    "The Lindqvists",
+    3,
+    "going",
+    "external"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__guest_rsvps (id, event_id, guest_name, guest_count, status, source, created_at) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT12:40:00Z','now','-241 days'))",
+   "params": [
+    "perf-gr-27",
+    "perf-ev-30",
+    "Coach Ramirez",
+    4,
+    "going",
+    "external"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__guest_rsvps (id, event_id, guest_name, guest_count, status, source, created_at) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT12:40:00Z','now','-242 days'))",
+   "params": [
+    "perf-gr-28",
+    "perf-ev-30",
+    "Mrs. Abernathy",
+    1,
+    "going",
+    "external"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__events (id, title, description, location, event_date, rsvp_deadline, guest_rsvps_close_at, created_by, created_at, cancelled) VALUES (?, ?, ?, ?, strftime('%Y-%m-%dT13:00:00Z','now','-262 days'), ?, strftime('%Y-%m-%dT00:00:00Z','now','-265 days'), ?, strftime('%Y-%m-%dT09:30:00Z','now','-289 days'), ?)",
+   "params": [
+    "perf-ev-31",
+    "Sledding and cocoa",
+    "Please RSVP so we know how much food to order.",
+    "Miller Hill",
+    "{{date:-265}}",
+    "{{me}}",
+    0
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','-265 days'), ?)",
+   "params": [
+    "perf-rs-104",
+    "perf-ev-31",
+    "{{me}}",
+    "no",
+    3,
+    "Bringing a salad",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','-266 days'), ?)",
+   "params": [
+    "perf-rs-105",
+    "perf-ev-31",
+    "{{partner}}",
+    "yes",
+    0,
+    "Might be 15 minutes late",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','-267 days'), ?)",
+   "params": [
+    "perf-rs-106",
+    "perf-ev-31",
+    "{{adult2}}",
+    "yes",
+    0,
+    "Can help set up",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','-268 days'), ?)",
+   "params": [
+    "perf-rs-107",
+    "perf-ev-31",
+    "{{child}}",
+    "maybe",
+    0,
+    "Gluten-free for one of us",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__events (id, title, description, location, event_date, guest_rsvps_close_at, headcount, created_by, created_at, cancelled) VALUES (?, ?, ?, ?, strftime('%Y-%m-%dT18:00:00Z','now','-290 days'), strftime('%Y-%m-%dT18:00:00Z','now','-290 days'), ?, ?, strftime('%Y-%m-%dT09:30:00Z','now','-318 days'), ?)",
+   "params": [
+    "perf-ev-32",
+    "Holiday lights walk",
+    "Everyone welcome. Bring a chair and something to share.",
+    "Start at the clubhouse",
+    50,
+    "{{adult2}}",
+    0
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','-291 days'), ?)",
+   "params": [
+    "perf-rs-108",
+    "perf-ev-32",
+    "{{me}}",
+    "yes",
+    1,
+    "Leaving early for practice",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, updated_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','-292 days'), ?)",
+   "params": [
+    "perf-rs-109",
+    "perf-ev-32",
+    "{{adult2}}",
+    "no",
+    0,
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, updated_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','-293 days'), ?)",
+   "params": [
+    "perf-rs-110",
+    "perf-ev-32",
+    "{{child}}",
+    "yes",
+    0,
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, updated_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','-294 days'), ?)",
+   "params": [
+    "perf-rs-111",
+    "perf-ev-32",
+    "{{child2}}",
+    "yes",
+    0,
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__guest_rsvps (id, event_id, guest_name, guest_count, status, source, created_at) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT12:40:00Z','now','-292 days'))",
+   "params": [
+    "perf-gr-29",
+    "perf-ev-32",
+    "Tomás",
+    2,
+    "going",
+    "external"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__guest_rsvps (id, event_id, guest_name, guest_count, status, source, created_at) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT12:40:00Z','now','-293 days'))",
+   "params": [
+    "perf-gr-30",
+    "perf-ev-32",
+    "Sam Chen",
+    3,
+    "maybe",
+    "external"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__guest_rsvps (id, event_id, guest_name, guest_count, status, source, created_at) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT12:40:00Z','now','-294 days'))",
+   "params": [
+    "perf-gr-31",
+    "perf-ev-32",
+    "The Okafor family",
+    4,
+    "going",
+    "external"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__events (id, title, description, location, event_date, guest_rsvps_close_at, headcount, created_by, created_at, cancelled) VALUES (?, ?, ?, ?, strftime('%Y-%m-%dT08:00:00Z','now','+5 days'), strftime('%Y-%m-%dT08:00:00Z','now','+5 days'), ?, ?, strftime('%Y-%m-%dT09:30:00Z','now','-29 days'), ?)",
+   "params": [
+    "perf-ev-33",
+    "Outdoor yoga in the park",
+    "Please RSVP so we know how much food to order.",
+    "Lakeside Park",
+    15,
+    "{{me}}",
+    1
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__activity (id, record_id, actor_id, action, detail, created_at) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT09:30:00Z','now','-29 days'))",
+   "params": [
+    "perf-ea-09",
+    "perf-ev-33",
+    "{{me}}",
+    "event_created",
+    "Outdoor yoga in the park"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__activity (id, record_id, actor_id, action, detail, created_at) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT12:00:00Z','now','-1 days'))",
+   "params": [
+    "perf-ea-10",
+    "perf-ev-33",
+    "{{me}}",
+    "event_cancelled",
+    "Outdoor yoga in the park"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','+0 days'), ?)",
+   "params": [
+    "perf-rs-112",
+    "perf-ev-33",
+    "{{me}}",
+    "maybe",
+    2,
+    "Bringing a salad",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','-1 days'), ?)",
+   "params": [
+    "perf-rs-113",
+    "perf-ev-33",
+    "{{partner}}",
+    "yes",
+    0,
+    "Might be 15 minutes late",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','+0 days'), ?)",
+   "params": [
+    "perf-rs-114",
+    "perf-ev-33",
+    "{{adult2}}",
+    "no",
+    0,
+    "Can help set up",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','+0 days'), ?)",
+   "params": [
+    "perf-rs-115",
+    "perf-ev-33",
+    "{{child2}}",
+    "yes",
+    0,
+    "Gluten-free for one of us",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__events (id, title, description, location, event_date, rsvp_deadline, guest_rsvps_close_at, headcount, created_by, created_at, cancelled) VALUES (?, ?, ?, ?, strftime('%Y-%m-%dT17:00:00Z','now','-14 days'), ?, strftime('%Y-%m-%dT00:00:00Z','now','-17 days'), ?, ?, strftime('%Y-%m-%dT09:30:00Z','now','-44 days'), ?)",
+   "params": [
+    "perf-ev-34",
+    "Chili cook-off",
+    "Everyone welcome. Bring a chair and something to share.",
+    "Clubhouse",
+    "{{date:-17}}",
+    40,
+    "{{partner}}",
+    1
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__activity (id, record_id, actor_id, action, detail, created_at) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT12:00:00Z','now','-16 days'))",
+   "params": [
+    "perf-ea-11",
+    "perf-ev-34",
+    "{{partner}}",
+    "event_cancelled",
+    "Chili cook-off"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','-17 days'), ?)",
+   "params": [
+    "perf-rs-116",
+    "perf-ev-34",
+    "{{me}}",
+    "yes",
+    3,
+    "Leaving early for practice",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, updated_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','-18 days'), ?)",
+   "params": [
+    "perf-rs-117",
+    "perf-ev-34",
+    "{{partner}}",
+    "maybe",
+    0,
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, updated_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','-19 days'), ?)",
+   "params": [
+    "perf-rs-118",
+    "perf-ev-34",
+    "{{adult2}}",
+    "yes",
+    0,
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, updated_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','-20 days'), ?)",
+   "params": [
+    "perf-rs-119",
+    "perf-ev-34",
+    "{{child}}",
+    "no",
+    0,
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT20:15:00Z','now','-15 days'), ?)",
+   "params": [
+    "perf-rs-120",
+    "perf-ev-34",
+    "{{child2}}",
+    "yes",
+    1,
+    "Bringing a salad",
+    "everyone"
+   ]
+  }
+ ]
+}
