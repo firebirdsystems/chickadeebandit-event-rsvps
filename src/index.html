@@ -422,6 +422,11 @@ async function db(sql, params = []) {
   return json;
 }
 
+// An error whose message the app wrote for the user is marked `forUser`;
+// anything else (the hub's own text) is replaced by the caller's fixed line.
+function userError(message) { return Object.assign(new Error(message), { forUser: true }); }
+function failText(e, line) { return e?.forUser ? e.message : line; }
+
 // ─── Member helpers ───────────────────────────────────────────────────────────
 function memberById(id) { return memberMap.get(id); }
 
@@ -518,7 +523,7 @@ async function updateEvent(id, data) {
      data.headcount || null, id]
   );
   // A write the hub narrows to nothing still answers 200.
-  if (changed === 0) throw new Error("This event could not be changed.");
+  if (changed === 0) throw userError("This event could not be changed.");
 
   const ev = events.find(e => e.id === id);
   if (ev) {
@@ -544,7 +549,7 @@ async function cancelEvent(id) {
   })) return;
 
   const { changed } = await db(`UPDATE app_event_rsvps__events SET cancelled=1 WHERE id=?`, [id]);
-  if (changed === 0) throw new Error("This event could not be cancelled.");
+  if (changed === 0) throw userError("This event could not be cancelled.");
   if (ev) ev.cancelled = 1;
 
   await Promise.all([
@@ -581,7 +586,7 @@ async function saveRsvp(eventId, status, guestCount, note) {
          WHERE event_id=? AND member_id=?`,
         [status, guestCount, note, now, eventId, memberId]
       );
-      if (changed === 0) throw new Error("Your RSVP could not be saved.");
+      if (changed === 0) throw userError("Your RSVP could not be saved.");
     } else {
       await db(
         `INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility)
@@ -594,7 +599,8 @@ async function saveRsvp(eventId, status, guestCount, note) {
     await loadRsvps().catch(() => {});
     _selectedStatus = myRsvp(eventId, rsvps, memberId)?.status ?? "";
     render();
-    hubAlert(e.message);
+    console.error(e);
+    hubAlert(failText(e, "Couldn’t save your RSVP — try again."));
   }
 }
 
@@ -637,11 +643,12 @@ async function deleteGuestRsvp(id, eventId) {
   render();
   try {
     const { changed } = await db(`DELETE FROM app_event_rsvps__guest_rsvps WHERE id = ?`, [id]);
-    if (changed === 0) throw new Error("It is no longer there, or it is not yours to remove.");
+    if (changed === 0) throw userError("It is no longer there, or it is not yours to remove.");
   } catch (e) {
     guestRsvps = previous;
     render();
-    hubAlert(`Could not remove that RSVP: ${e.message}`);
+    console.error(e);
+    hubAlert(e?.forUser ? `Could not remove that RSVP: ${e.message}` : "Couldn’t remove that RSVP — try again.");
     return;
   }
   logActivity(eventId, "guest_rsvp_removed", `${ME?.name ?? "Someone"} removed a link RSVP from ${row.guest_name || "an unnamed visitor"}`)
@@ -894,7 +901,11 @@ async function createShare(eventId) {
     await openShareModal(eventId); // refresh the list in place
   } catch (err) {
     if (btn) { btn.disabled = false; btn.textContent = "Create link"; }
-    hubAlert("Couldn't create share link", { description: err.message });
+    console.error(err);
+    // Sharing not being part of the household's plan is the hub's own answer
+    // and is shown as given; any other failure gets the app's line.
+    if (err?.missingCapability) hubAlert("Couldn't create share link", { description: err.message });
+    else hubAlert("Couldn’t create the share link — try again.");
   }
 }
 
@@ -911,7 +922,8 @@ async function revokeShare(id, eventId) {
     await share.revoke(id);
     await openShareModal(eventId);
   } catch (err) {
-    hubAlert("Couldn't revoke share link", { description: err.message });
+    console.error(err);
+    hubAlert("Couldn’t revoke the share link — try again.");
   }
 }
 
@@ -943,7 +955,8 @@ window.submitEvent = async function(existingId) {
     if (existingId) await updateEvent(existingId, data);
     else            await createEvent(data);
   } catch (e) {
-    showErr(errEl, e.message || "Couldn’t reach the hub. Try again.");
+    console.error(e);
+    showErr(errEl, failText(e, "Couldn’t save the event — try again."));
     if (btn) { btn.disabled = false; btn.textContent = existingId ? "Save Changes" : "Create Event"; }
   }
 };
@@ -1282,9 +1295,9 @@ window.openEvent = function(id) {
 window.backToList       = function()  { currentEventId = null; render(); };
 window.setTab           = function(t) { listTab = t; render(); };
 window.openCreateEventModal = openCreateEventModal;
-window.doSendReminders  = function(id) { sendReminders(id).catch(e => hubAlert(e.message)); };
+window.doSendReminders  = function(id) { sendReminders(id).catch(e => { console.error(e); hubAlert("Couldn’t send the reminders — try again."); }); };
 window.doExport         = function(id) { exportCsv(id); };
-window.doCancelEvent    = function(id) { cancelEvent(id).catch(e => hubAlert(e.message)); };
+window.doCancelEvent    = function(id) { cancelEvent(id).catch(e => { console.error(e); hubAlert(failText(e, "Couldn’t cancel the event — try again.")); }); };
 
 // ─── Render ───────────────────────────────────────────────────────────────────
 function render() {
@@ -1371,7 +1384,7 @@ document.addEventListener("click", (e) => {
     case "send-reminders": window.doSendReminders(id); break;
     case "export":         window.doExport(id); break;
     case "cancel-event":   window.doCancelEvent(id); break;
-    case "share-event":    openShareModal(id).catch(e => hubAlert(e.message)); break;
+    case "share-event":    openShareModal(id).catch(e => { console.error(e); hubAlert("Couldn’t load the share links."); }); break;
     case "create-share":   createShare(id); break;
     case "copy-share":     copyShare(id); break;
     case "revoke-share":   revokeShare(id, el.dataset.eventId ?? ""); break;
