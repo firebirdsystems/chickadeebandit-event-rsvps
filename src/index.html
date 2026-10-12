@@ -358,6 +358,8 @@
     .guest-name { font-weight: 600; }
     .guest-meta { color: var(--muted); font-size: 0.8rem; }
     .guest-remove { margin-left: auto; }
+    .load-error { margin: 0 0 12px; padding: 10px 14px; border-radius: 10px; background: var(--hub-tint-danger, #fee2e2); color: var(--hub-tint-danger-fg, #b91c1c); font-size: 0.9rem; display: flex; gap: 10px; align-items: center; justify-content: space-between; }
+    .load-error-retry { background: none; border: 1px solid currentColor; border-radius: 8px; padding: 5px 10px; font: inherit; font-weight: 600; color: inherit; cursor: pointer; flex-shrink: 0; }
   </style>
   <base href="/run/event-rsvps/">
 </head>
@@ -411,12 +413,12 @@ async function db(sql, params = []) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ sql, params }),
   });
-  const json = await res.json();
+  const json = await res.json().catch(() => null);
   // The hub reports a refused write as a JSON body with an `error` key
   // (403 row policy, 400 bad statement, 507 over quota). fetch() does not
   // reject on those, so without this throw every caller's rollback and
   // error toast below is unreachable code.
-  if (!res.ok || json.error) throw new Error(json.error || `Database request failed (${res.status})`);
+  if (!res.ok || !json || typeof json !== "object" || json.error) throw new Error(json?.error || "Couldn’t reach the hub. Try again.");
   return json;
 }
 
@@ -436,11 +438,15 @@ async function loadMembers() {
     memberMap = new Map(members.map(m => [m.id, m]));
     return;
   }
-  try {
-    const res = await fetch(`${CONTEXT}?keys=family.members`);
-    members = ((await res.json())["family.members"]) ?? [];
-    memberMap = new Map(members.map(m => [m.id, m]));
-  } catch { members = []; }
+  // A roster that could not be read is a failed load, not an empty household.
+  const res = await fetch(`${CONTEXT}?keys=family.members`);
+  if (!res.ok) throw new Error(`context ${res.status}`);
+  const json = await res.json();
+  if (!json || typeof json !== "object") throw new Error("context: unexpected response");
+  // The hub answers 200 and names a key it could not resolve in `$errors`.
+  if (Array.isArray(json.$errors) && json.$errors.includes("family.members")) throw new Error("context: family.members did not resolve");
+  members = json["family.members"] ?? [];
+  memberMap = new Map(members.map(m => [m.id, m]));
 }
 
 async function loadEvents() {
@@ -477,7 +483,6 @@ async function createEvent(data) {
     headcount: data.headcount || null, created_by: ME?.id ?? "system",
     created_at: now, cancelled: 0,
   };
-  events.push(newEvent);
 
   await db(
     `INSERT INTO app_event_rsvps__events (id, title, description, location, event_date, rsvp_deadline, guest_rsvps_close_at, headcount, created_by, created_at)
@@ -486,6 +491,7 @@ async function createEvent(data) {
      data.rsvp_deadline || null, guestRsvpsCloseAt(data.event_date, data.rsvp_deadline),
      data.headcount || null, ME?.id ?? "system", now]
   );
+  events.push(newEvent);
 
   await Promise.all([
     logActivity(id, "event_created", data.title),
@@ -505,6 +511,15 @@ async function createEvent(data) {
 }
 
 async function updateEvent(id, data) {
+  const { changed } = await db(
+    `UPDATE app_event_rsvps__events SET title=?, description=?, location=?, event_date=?, rsvp_deadline=?, guest_rsvps_close_at=?, headcount=? WHERE id=?`,
+    [data.title, data.description, data.location, data.event_date,
+     data.rsvp_deadline || null, guestRsvpsCloseAt(data.event_date, data.rsvp_deadline),
+     data.headcount || null, id]
+  );
+  // A write the hub narrows to nothing still answers 200.
+  if (changed === 0) throw new Error("This event could not be changed.");
+
   const ev = events.find(e => e.id === id);
   if (ev) {
     ev.title         = data.title;
@@ -514,13 +529,6 @@ async function updateEvent(id, data) {
     ev.rsvp_deadline = data.rsvp_deadline || null;
     ev.headcount     = data.headcount || null;
   }
-
-  await db(
-    `UPDATE app_event_rsvps__events SET title=?, description=?, location=?, event_date=?, rsvp_deadline=?, guest_rsvps_close_at=?, headcount=? WHERE id=?`,
-    [data.title, data.description, data.location, data.event_date,
-     data.rsvp_deadline || null, guestRsvpsCloseAt(data.event_date, data.rsvp_deadline),
-     data.headcount || null, id]
-  );
 
   closeModal();
   render();
@@ -535,8 +543,9 @@ async function cancelEvent(id) {
     destructive: true,
   })) return;
 
+  const { changed } = await db(`UPDATE app_event_rsvps__events SET cancelled=1 WHERE id=?`, [id]);
+  if (changed === 0) throw new Error("This event could not be cancelled.");
   if (ev) ev.cancelled = 1;
-  await db(`UPDATE app_event_rsvps__events SET cancelled=1 WHERE id=?`, [id]);
 
   await Promise.all([
     logActivity(id, "event_cancelled", ev?.title ?? ""),
@@ -565,18 +574,27 @@ async function saveRsvp(eventId, status, guestCount, note) {
   // visibility='everyone' so the headcount/attendance is readable by every member;
   // the owner_or_visibility policy still restricts writes to the row's own member.
   // max_per_member forbids upsert INSERTs, so update the existing row explicitly.
-  if (existing) {
-    db(
-      `UPDATE app_event_rsvps__rsvps SET status=?, guest_count=?, note=?, updated_at=?
-       WHERE event_id=? AND member_id=?`,
-      [status, guestCount, note, now, eventId, memberId]
-    );
-  } else {
-    db(
-      `INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [id, eventId, memberId, status, guestCount, note, now, "everyone"]
-    );
+  try {
+    if (existing) {
+      const { changed } = await db(
+        `UPDATE app_event_rsvps__rsvps SET status=?, guest_count=?, note=?, updated_at=?
+         WHERE event_id=? AND member_id=?`,
+        [status, guestCount, note, now, eventId, memberId]
+      );
+      if (changed === 0) throw new Error("Your RSVP could not be saved.");
+    } else {
+      await db(
+        `INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [id, eventId, memberId, status, guestCount, note, now, "everyone"]
+      );
+    }
+  } catch (e) {
+    // The answer shown above was never stored: put back what the hub holds.
+    await loadRsvps().catch(() => {});
+    _selectedStatus = myRsvp(eventId, rsvps, memberId)?.status ?? "";
+    render();
+    hubAlert(e.message);
   }
 }
 
@@ -618,7 +636,8 @@ async function deleteGuestRsvp(id, eventId) {
   guestRsvps = guestRsvps.filter(g => g.id !== id);
   render();
   try {
-    await db(`DELETE FROM app_event_rsvps__guest_rsvps WHERE id = ?`, [id]);
+    const { changed } = await db(`DELETE FROM app_event_rsvps__guest_rsvps WHERE id = ?`, [id]);
+    if (changed === 0) throw new Error("It is no longer there, or it is not yours to remove.");
   } catch (e) {
     guestRsvps = previous;
     render();
@@ -923,7 +942,8 @@ window.submitEvent = async function(existingId) {
     };
     if (existingId) await updateEvent(existingId, data);
     else            await createEvent(data);
-  } catch {
+  } catch (e) {
+    showErr(errEl, e.message || "Couldn’t reach the hub. Try again.");
     if (btn) { btn.disabled = false; btn.textContent = existingId ? "Save Changes" : "Create Event"; }
   }
 };
@@ -1262,9 +1282,9 @@ window.openEvent = function(id) {
 window.backToList       = function()  { currentEventId = null; render(); };
 window.setTab           = function(t) { listTab = t; render(); };
 window.openCreateEventModal = openCreateEventModal;
-window.doSendReminders  = function(id) { sendReminders(id); };
+window.doSendReminders  = function(id) { sendReminders(id).catch(e => hubAlert(e.message)); };
 window.doExport         = function(id) { exportCsv(id); };
-window.doCancelEvent    = function(id) { cancelEvent(id); };
+window.doCancelEvent    = function(id) { cancelEvent(id).catch(e => hubAlert(e.message)); };
 
 // ─── Render ───────────────────────────────────────────────────────────────────
 function render() {
@@ -1351,7 +1371,7 @@ document.addEventListener("click", (e) => {
     case "send-reminders": window.doSendReminders(id); break;
     case "export":         window.doExport(id); break;
     case "cancel-event":   window.doCancelEvent(id); break;
-    case "share-event":    openShareModal(id); break;
+    case "share-event":    openShareModal(id).catch(e => hubAlert(e.message)); break;
     case "create-share":   createShare(id); break;
     case "copy-share":     copyShare(id); break;
     case "revoke-share":   revokeShare(id, el.dataset.eventId ?? ""); break;
@@ -1360,10 +1380,18 @@ document.addEventListener("click", (e) => {
 });
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
-(async () => {
+async function firstLoad() {
   // The table reads need nothing from the member list, so they go out with it
   // rather than after it. Each loader is a no-op without DB_URL (demo mode).
-  await Promise.all([loadMembers(), loadEvents(), loadRsvps(), loadGuestRsvps()]);
+  try {
+    await Promise.all([loadMembers(), loadEvents(), loadRsvps(), loadGuestRsvps()]);
+  } catch {
+    // Nothing was read, so an empty list would be a false answer: say so instead.
+    document.getElementById("root").innerHTML = `
+      <div class="page-header"><h1>Event RSVPs</h1></div>
+      <div class="load-error" data-testid="load-error" role="alert"><span>Couldn’t load events.</span> <button type="button" class="load-error-retry" data-testid="load-retry">Try again</button></div>`;
+    return;
+  }
 
   if (HUB_MEMBER) {
     ME = members.find(m => m.id === HUB_MEMBER.id) ?? HUB_MEMBER;
@@ -1375,7 +1403,11 @@ document.addEventListener("click", (e) => {
 
   render();
   handleDeepLink();
-})();
+}
+document.addEventListener("click", (e) => {
+  if (e.target.closest('[data-testid="load-retry"]')) firstLoad();
+});
+firstLoad();
 </script>
 </body>
 </html>
