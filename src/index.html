@@ -498,14 +498,17 @@ async function createEvent(data) {
   );
   events.push(newEvent);
 
+  // The event is stored. A failed activity-log write or notification must not
+  // report it as failed (a retry would create it twice), so each is handled
+  // here and not by the caller's catch.
   await Promise.all([
-    logActivity(id, "event_created", data.title),
+    logActivity(id, "event_created", data.title).catch(e => console.error(e)),
     sendNotification(
       `New event: ${data.title}`,
       `${ME?.name ?? "Someone"} added a new event — RSVP now!`,
       "all",
       `/open/${APP_ID}?eventId=${encodeURIComponent(id)}`
-    ),
+    ).catch(e => console.error(e)),
     publishEvent("event.created", id, { title: data.title, event_date: localDateKey(data.event_date) }),
   ]);
 
