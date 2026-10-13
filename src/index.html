@@ -552,10 +552,10 @@ async function cancelEvent(id) {
   if (changed === 0) throw userError("This event could not be cancelled.");
   if (ev) ev.cancelled = 1;
 
-  await Promise.all([
-    logActivity(id, "event_cancelled", ev?.title ?? ""),
-    publishEvent("event.cancelled", id, { title: ev?.title ?? "" }),
-  ]);
+  // The cancel is stored. A failed activity-log write must not report it as
+  // failed, so it is handled here and not by the caller's catch.
+  publishEvent("event.cancelled", id, { title: ev?.title ?? "" });
+  await logActivity(id, "event_cancelled", ev?.title ?? "").catch(e => console.error(e));
 
   currentEventId = null;
   render();
