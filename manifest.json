@@ -73,16 +73,7 @@
   "row_policies": {
     "events": {
       "kind": "adult_writable",
-      "steward_writes_only": true,
-      "retain_days": {
-        "default": 730,
-        "timestamp_column": "event_date",
-        "override_key": "event_history",
-        "dependent_tables": [
-          { "table": "rsvps", "foreign_key": "event_id" },
-          { "table": "guest_rsvps", "foreign_key": "event_id" }
-        ]
-      }
+      "steward_writes_only": true
     },
     "rsvps": {
       "kind": "owner_or_visibility",
@@ -99,8 +90,7 @@
     "activity": {
       "kind": "owner_only",
       "member_column": "actor_id",
-      "adults_bypass": true,
-      "retain_days": { "default": 365, "timestamp_column": "created_at", "override_key": "activity_history" }
+      "adults_bypass": true
     },
     "guest_rsvps": {
       "kind": "adult_writable",
@@ -109,6 +99,18 @@
       "audit_writes": true,
       "max_rows": 200
     }
+  },
+  "retention": {
+    "events": {
+      "default": 730,
+      "timestamp_column": "event_date",
+      "override_key": "event_history",
+      "dependent_tables": [
+        { "table": "rsvps", "foreign_key": "event_id" },
+        { "table": "guest_rsvps", "foreign_key": "event_id" }
+      ]
+    },
+    "activity": { "default": 365, "timestamp_column": "created_at", "override_key": "activity_history" }
   },
   "member_references": {
     "events": { "column": "created_by", "on_removed": "keep" },
@@ -187,9 +189,6 @@
       "query": "SELECT title AS title, NULLIF(location, '') AS subtitle, event_date AS at FROM app_event_rsvps__events WHERE cancelled = 0 AND substr(event_date, 1, 10) >= :today ORDER BY event_date LIMIT 3"
     },
     "display": { "template": "list", "title": "title", "subtitle": "subtitle", "when": "at" }
-  },
-  "resource_limits": {
-    "max_db_bytes": 52428800
   },
   "icon": "🎟️",
   "ai_access": {
