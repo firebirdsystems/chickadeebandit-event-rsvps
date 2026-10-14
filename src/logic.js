@@ -195,3 +195,74 @@ export function summarizeReminderDelivery(result, nonResponderCount) {
 export function searchableFields(item) {
   return [item.title, item.description, item.location];
 }
+
+/**
+ * The line a failed share-link create or revoke shows ("Hub endpoints other than `/api/db`"
+ * in the app-template guide). The SDK's share helper puts the hub's `.status` (and `.code`)
+ * on its error; the hub's text never reaches the screen.
+ *   402 — on a plain link, the free plan's active-link cap (a 402 for a password, guest RSVPs
+ *         or a longer expiry is the caller's plan line, checked before this)
+ *   409 — `code: "share_link_limit"` is a paid household's active-link cap; a 409 without
+ *         that code (a failure inside the mint, or an older hub) keeps "try again"
+ *   400 — `code: "password_too_short"`; the caller pre-checks the length, so this is a backstop
+ *   403 — not allowed, including `code: "not_owner"` (revoking another member's link)
+ *   404 — the event is gone (a revoke's 404 is the caller's: the link is already gone)
+ *   429 — too many requests just now
+ */
+export function shareFailureLine(e, { action, thing } = {}) {
+  if (e?.status === 402) return "Too many share links are active — revoke one first.";
+  if (e?.status === 409 && e?.code === "share_link_limit") return "Too many share links are active — revoke one first.";
+  if (e?.status === 400 && e?.code === "password_too_short") return "The password needs at least 6 characters.";
+  if (e?.status === 403) return `You don’t have permission to ${action}.`;
+  if (e?.status === 404) return `This ${thing} has been removed.`;
+  if (e?.status === 429) return "Too many tries — wait a minute and try again.";
+  return `Couldn’t ${action} — try again.`;
+}
+
+/**
+ * "Retry after a lost response" (app-template guide): whether a failed
+ * write's answer leaves its outcome unknown — no status, a 400, or a 5xx
+ * other than 507 — so the page reads the row back by its pinned id. A
+ * `UNIQUE_CONSTRAINT` answer is a 400 too: the usual retry of a create that
+ * landed collides on its own pinned id. Only finding the row under that id
+ * says it landed; not found keeps the "already exists" line.
+ */
+export function outcomeUnknown(e) {
+  if (e?.code === "UNIQUE_CONSTRAINT" || /UNIQUE constraint failed/i.test(String(e?.message ?? ""))) return true;
+  const status = Number(e?.status) || 0;
+  return status === 0 || status === 400 || (status >= 500 && status !== 507);
+}
+
+/**
+ * Whether a stored row differs from what the form holds now, over the form's
+ * own fields only, compared as text with a missing value as empty.
+ */
+export function storedDiffers(row, fields) {
+  return Object.keys(fields).some((k) => String(row?.[k] ?? "") !== String(fields[k] ?? ""));
+}
+
+export const SAVED_AS_FIRST = "Saved as first entered — check it and update what changed.";
+
+/**
+ * The line a failed write shows ("Refused, gone, or failed" in the app-template
+ * guide): "try again" only when retrying can work. `action` and `thing` are the
+ * app's own words ("save the event", "event"). An error the app worded for the
+ * user (`forUser`) keeps its message. Decided from the error's `status` /
+ * `code`, never from the hub's text.
+ *
+ * `found` is the caller's re-read after a write that changed nothing: false —
+ * the row is gone; true — it is still there, which on this app's plain
+ * `WHERE id = ?` writes means the row policy narrowed the write away; null —
+ * the re-read itself failed.
+ */
+export function failureLine(e, { action, thing, found } = {}) {
+  if (e?.forUser) return e.message;
+  if (e?.code === "UNIQUE_CONSTRAINT" || /UNIQUE constraint failed/i.test(String(e?.message ?? ""))) return `That ${thing} already exists.`;
+  if (e?.status === 403 || found === true) return `You don’t have permission to ${action}.`;
+  if (e?.status === 507) return "The household’s storage is full — free up space first.";
+  if (e?.status === 429) return "Too many tries — wait a minute and try again.";
+  if (found === null) return `Couldn’t ${action} — try again.`;
+  if (found === false || e?.status === 404) return `This ${thing} has been removed.`;
+  if (e?.status === 409) return `This ${thing} was changed by someone else — check it first.`;
+  return `Couldn’t ${action} — try again.`;
+}

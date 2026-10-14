@@ -375,7 +375,8 @@ import {
   isUpcoming, deadlinePassed, guestRsvpsCloseAt,
   myRsvp, rsvpCounts, totalAttendees,
   guestRsvpsFor, guestTotals, duplicateGuestNames, csvCell, normalizeTimestamp,
-  buildReminderNotification, summarizeReminderDelivery, searchableFields,
+  buildReminderNotification, summarizeReminderDelivery, searchableFields, shareFailureLine,
+  outcomeUnknown, storedDiffers, SAVED_AS_FIRST, failureLine,
 } from "./logic.js";
 
 // ─── Runtime globals ──────────────────────────────────────────────────────────
@@ -418,14 +419,20 @@ async function db(sql, params = []) {
   // (403 row policy, 400 bad statement, 507 over quota). fetch() does not
   // reject on those, so without this throw every caller's rollback and
   // error toast below is unreachable code.
-  if (!res.ok || !json || typeof json !== "object" || json.error) throw new Error(json?.error || "Couldn’t reach the hub. Try again.");
+  if (!res.ok || !json || typeof json !== "object" || json.error) throw Object.assign(new Error(json?.error || "Couldn’t reach the hub. Try again."), { status: res.status, code: json?.code });
   return json;
 }
 
 // An error whose message the app wrote for the user is marked `forUser`;
-// anything else (the hub's own text) is replaced by the caller's fixed line.
+// anything else (the hub's own text) is replaced by logic.js failureLine.
 function userError(message) { return Object.assign(new Error(message), { forUser: true }); }
-function failText(e, line) { return e?.forUser ? e.message : line; }
+
+// After a write that changed nothing: is the row still there? true or false,
+// or null when the re-read itself failed (see logic.js failureLine `found`).
+async function stillThere(sql, params) {
+  try { return ((await db(sql, params)).rows?.length ?? 0) > 0; }
+  catch (e) { console.error(e); return null; }
+}
 
 // ─── Member helpers ───────────────────────────────────────────────────────────
 function memberById(id) { return memberMap.get(id); }
@@ -480,23 +487,50 @@ async function loadGuestRsvps() {
 
 // ─── Actions ──────────────────────────────────────────────────────────────────
 async function createEvent(data) {
-  const id  = crypto.randomUUID();
+  // The id is the form's, minted on its first Create and sent on every retry:
+  // a try whose answer was lost may have stored the event, and a second press
+  // must find that row rather than create (and announce) another.
+  const form = modalEl;
+  const id  = form ? (form.dataset.rowId ||= crypto.randomUUID()) : crypto.randomUUID();
   const now = new Date().toISOString();
-  const newEvent = {
+  let newEvent = {
     id, title: data.title, description: data.description, location: data.location,
     event_date: data.event_date, rsvp_deadline: data.rsvp_deadline || null,
     headcount: data.headcount || null, created_by: ME?.id ?? "system",
     created_at: now, cancelled: 0,
   };
 
-  await db(
-    `INSERT INTO app_event_rsvps__events (id, title, description, location, event_date, rsvp_deadline, guest_rsvps_close_at, headcount, created_by, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [id, data.title, data.description, data.location, data.event_date,
-     data.rsvp_deadline || null, guestRsvpsCloseAt(data.event_date, data.rsvp_deadline),
-     data.headcount || null, ME?.id ?? "system", now]
-  );
-  events.push(newEvent);
+  let note = "";
+  try {
+    await db(
+      `INSERT INTO app_event_rsvps__events (id, title, description, location, event_date, rsvp_deadline, guest_rsvps_close_at, headcount, created_by, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [id, data.title, data.description, data.location, data.event_date,
+       data.rsvp_deadline || null, guestRsvpsCloseAt(data.event_date, data.rsvp_deadline),
+       data.headcount || null, ME?.id ?? "system", now]
+    );
+  } catch (e) {
+    // Unknown outcome: read the event back by the pinned id. Found means an
+    // earlier try landed and its push and alert never went, so they go now,
+    // once. Not found, or the read failed: the save fails, the id stays pinned.
+    if (!outcomeUnknown(e)) throw e;
+    let stored = null;
+    try { stored = (await db("SELECT * FROM app_event_rsvps__events WHERE id = ?", [id])).rows?.[0] ?? null; }
+    catch (readErr) {
+      // The id is ours: with the read-back failed, a UNIQUE answer may be this
+      // form's own first try, so nothing is known — "try again", not "already exists".
+      console.error(readErr);
+      throw new Error("create outcome unknown", { cause: e });
+    }
+    if (!stored) throw e;
+    console.error(e);
+    // Edited since that first try: what was stored is kept, and said so.
+    if (storedDiffers(stored, { ...data, rsvp_deadline: data.rsvp_deadline || null, headcount: data.headcount || null })) note = SAVED_AS_FIRST;
+    newEvent = stored;
+  }
+  if (form) delete form.dataset.rowId;
+  events = [...events.filter(ev => ev.id !== id), newEvent];
+  data = newEvent;
 
   // The event is stored. A failed activity-log write or notification must not
   // report it as failed (a retry would create it twice), so each is handled
@@ -512,15 +546,18 @@ async function createEvent(data) {
     publishEvent("event.created", id, { title: data.title, event_date: localDateKey(data.event_date) }),
   ]);
 
-  closeModal();
+  // Only the dialog this save came from: another opened meanwhile stays open.
+  closeModalIf(form);
   currentEventId = id;
   _selectedStatus = "";
   // The write is stored: a throw while drawing must not reach the caller's
   // catch and report it as failed.
   try { render(); } catch (e) { console.error(e); }
+  if (note) hubAlert(note);
 }
 
 async function updateEvent(id, data) {
+  const dialog = modalEl;
   const { changed } = await db(
     `UPDATE app_event_rsvps__events SET title=?, description=?, location=?, event_date=?, rsvp_deadline=?, guest_rsvps_close_at=?, headcount=? WHERE id=?`,
     [data.title, data.description, data.location, data.event_date,
@@ -528,7 +565,10 @@ async function updateEvent(id, data) {
      data.headcount || null, id]
   );
   // A write the hub narrows to nothing still answers 200.
-  if (changed === 0) throw userError("This event could not be changed.");
+  if (changed === 0) {
+    const found = await stillThere("SELECT id FROM app_event_rsvps__events WHERE id = ?", [id]);
+    throw userError(failureLine(null, { action: "save the event", thing: "event", found }));
+  }
 
   const ev = events.find(e => e.id === id);
   if (ev) {
@@ -540,7 +580,7 @@ async function updateEvent(id, data) {
     ev.headcount     = data.headcount || null;
   }
 
-  closeModal();
+  closeModalIf(dialog);
   // The write is stored: a throw while drawing must not reach the caller's
   // catch and report it as failed.
   try { render(); } catch (e) { console.error(e); }
@@ -556,7 +596,10 @@ async function cancelEvent(id) {
   })) return;
 
   const { changed } = await db(`UPDATE app_event_rsvps__events SET cancelled=1 WHERE id=?`, [id]);
-  if (changed === 0) throw userError("This event could not be cancelled.");
+  if (changed === 0) {
+    const found = await stillThere("SELECT id FROM app_event_rsvps__events WHERE id = ?", [id]);
+    throw userError(failureLine(null, { action: "cancel the event", thing: "event", found }));
+  }
   if (ev) ev.cancelled = 1;
 
   // The cancel is stored. A failed activity-log write must not report it as
@@ -595,7 +638,10 @@ async function saveRsvp(eventId, status, guestCount, note) {
          WHERE event_id=? AND member_id=?`,
         [status, guestCount, note, now, eventId, memberId]
       );
-      if (changed === 0) throw userError("Your RSVP could not be saved.");
+      if (changed === 0) {
+        const found = await stillThere("SELECT id FROM app_event_rsvps__rsvps WHERE event_id = ? AND member_id = ?", [eventId, memberId]);
+        throw userError(failureLine(null, { action: "save your RSVP", thing: "RSVP", found }));
+      }
     } else {
       await db(
         `INSERT INTO app_event_rsvps__rsvps (id, event_id, member_id, status, guest_count, note, updated_at, visibility)
@@ -609,7 +655,7 @@ async function saveRsvp(eventId, status, guestCount, note) {
     _selectedStatus = myRsvp(eventId, rsvps, memberId)?.status ?? "";
     render();
     console.error(e);
-    hubAlert(failText(e, "Couldn’t save your RSVP — try again."));
+    hubAlert(failureLine(e, { action: "save your RSVP", thing: "RSVP" }));
   }
 }
 
@@ -650,14 +696,18 @@ async function deleteGuestRsvp(id, eventId) {
   const previous = guestRsvps;
   guestRsvps = guestRsvps.filter(g => g.id !== id);
   render();
+  let gone = false;   // already removed: it stays off the list
   try {
     const { changed } = await db(`DELETE FROM app_event_rsvps__guest_rsvps WHERE id = ?`, [id]);
-    if (changed === 0) throw userError("It is no longer there, or it is not yours to remove.");
+    if (changed === 0) {
+      const found = await stillThere("SELECT id FROM app_event_rsvps__guest_rsvps WHERE id = ?", [id]);
+      gone = found === false;
+      throw userError(failureLine(null, { action: "remove that RSVP", thing: "RSVP", found }));
+    }
   } catch (e) {
-    guestRsvps = previous;
-    render();
+    if (!gone) { guestRsvps = previous; render(); }
     console.error(e);
-    hubAlert(e?.forUser ? `Could not remove that RSVP: ${e.message}` : "Couldn’t remove that RSVP — try again.");
+    hubAlert(failureLine(e, { action: "remove that RSVP", thing: "RSVP" }));
     return;
   }
   logActivity(eventId, "guest_rsvp_removed", `${ME?.name ?? "Someone"} removed a link RSVP from ${row.guest_name || "an unnamed visitor"}`)
@@ -785,6 +835,9 @@ function openModal(html) {
 }
 function closeModal() { modalEl?.remove(); modalEl = null; }
 window.closeModal = closeModal;
+// Closes `el` only if it is still the open dialog (a save that ends after the
+// member opened another must not close that one).
+function closeModalIf(el) { if (el && el === modalEl) closeModal(); }
 
 function openCreateEventModal(existingId = null) {
   const ev = existingId ? events.find(e => e.id === existingId) : null;
@@ -871,7 +924,7 @@ async function openShareModal(eventId) {
     <label style="display:flex;gap:6px;align-items:center;font-size:0.85rem;margin-top:10px">
       <input type="checkbox" id="share-writable" /> Let guests RSVP through this link
     </label>
-    <input id="share-password" type="text" placeholder="Optional password (min 4 chars)" autocomplete="off"
+    <input id="share-password" type="text" placeholder="Optional password (min 6 chars)" autocomplete="off"
       style="width:100%;margin-top:8px;padding:6px;border:1px solid var(--border);border-radius:6px;background:var(--bg);font-size:0.85rem" />
   ` : "";
 
@@ -902,6 +955,8 @@ async function createShare(eventId) {
   const hours = Number(document.getElementById("share-expiry")?.value) || undefined;
   const writable = !!document.getElementById("share-writable")?.checked;
   const password = document.getElementById("share-password")?.value?.trim() || undefined;
+  // The hub refuses a short password; say so here rather than as a failure to retry.
+  if (password && password.length < 6) { hubAlert("The password needs at least 6 characters."); return; }
   const btn = modalEl?.querySelector('[data-action="create-share"]');
   if (btn) { btn.disabled = true; btn.textContent = "Creating…"; }
   let link;
@@ -910,10 +965,12 @@ async function createShare(eventId) {
   } catch (err) {
     if (btn) { btn.disabled = false; btn.textContent = "Create link"; }
     console.error(err);
-    // Sharing not being part of the household's plan is the hub's own answer
-    // and is shown as given; any other failure gets the app's line.
-    if (err?.missingCapability) hubAlert("Couldn't create share link", { description: err.message });
-    else hubAlert("Couldn’t create the share link — try again.");
+    // A refusal says what happened; only a failure (no answer, a 5xx) asks for
+    // a retry. A 402 for guest RSVPs, a password or a longer expiry is the plan;
+    // on a plain link it is the free plan's link cap (shareFailureLine).
+    hubAlert(err?.status === 402 && (writable || password || hours > 720)
+      ? "Guest RSVPs, a password or a longer expiry need an active plan."
+      : shareFailureLine(err, { action: "create the share link", thing: "event" }));
     return;
   }
   // The link exists. A failed re-read must not report it as not created (a
@@ -936,8 +993,8 @@ async function revokeShare(id, eventId) {
     await share.revoke(id);
   } catch (err) {
     console.error(err);
-    hubAlert("Couldn’t revoke the share link — try again.");
-    return;
+    // A 404 is a link the hub no longer has: done; the refresh below drops it.
+    if (err?.status !== 404) { hubAlert(shareFailureLine(err, { action: "revoke the share link", thing: "event" })); return; }
   }
   // The link is revoked: a failed re-read is not a failed revoke.
   await openShareModal(eventId)
@@ -973,7 +1030,7 @@ window.submitEvent = async function(existingId) {
     else            await createEvent(data);
   } catch (e) {
     console.error(e);
-    showErr(errEl, failText(e, "Couldn’t save the event — try again."));
+    showErr(errEl, failureLine(e, { action: "save the event", thing: "event" }));
     if (btn) { btn.disabled = false; btn.textContent = existingId ? "Save Changes" : "Create Event"; }
   }
 };
@@ -1314,7 +1371,7 @@ window.setTab           = function(t) { listTab = t; render(); };
 window.openCreateEventModal = openCreateEventModal;
 window.doSendReminders  = function(id) { sendReminders(id).catch(e => { console.error(e); hubAlert("Couldn’t send the reminders — try again."); }); };
 window.doExport         = function(id) { exportCsv(id); };
-window.doCancelEvent    = function(id) { cancelEvent(id).catch(e => { console.error(e); hubAlert(failText(e, "Couldn’t cancel the event — try again.")); }); };
+window.doCancelEvent    = function(id) { cancelEvent(id).catch(e => { console.error(e); hubAlert(failureLine(e, { action: "cancel the event", thing: "event" })); }); };
 
 // ─── Render ───────────────────────────────────────────────────────────────────
 function render() {
