@@ -49,7 +49,7 @@ describe("manifest.json", () => {
   // orphaned by the parent prune; `activity` is not listed because its own
   // 365-day window already retires those rows first.
   it("expires events two years after they happen, with both RSVP tables", () => {
-    const retain = manifest.row_policies?.events?.retain_days;
+    const retain = manifest.retention?.events;
     expect(retain?.default).toBe(730);
     expect(retain?.timestamp_column).toBe("event_date");
     expect(retain?.override_key).toBe("event_history");
