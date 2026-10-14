@@ -515,7 +515,9 @@ async function createEvent(data) {
   closeModal();
   currentEventId = id;
   _selectedStatus = "";
-  render();
+  // The write is stored: a throw while drawing must not reach the caller's
+  // catch and report it as failed.
+  try { render(); } catch (e) { console.error(e); }
 }
 
 async function updateEvent(id, data) {
@@ -539,7 +541,9 @@ async function updateEvent(id, data) {
   }
 
   closeModal();
-  render();
+  // The write is stored: a throw while drawing must not reach the caller's
+  // catch and report it as failed.
+  try { render(); } catch (e) { console.error(e); }
 }
 
 async function cancelEvent(id) {
@@ -561,7 +565,9 @@ async function cancelEvent(id) {
   await logActivity(id, "event_cancelled", ev?.title ?? "").catch(e => console.error(e));
 
   currentEventId = null;
-  render();
+  // The write is stored: a throw while drawing must not reach the caller's
+  // catch and report it as failed.
+  try { render(); } catch (e) { console.error(e); }
 }
 
 async function saveRsvp(eventId, status, guestCount, note) {
@@ -898,10 +904,9 @@ async function createShare(eventId) {
   const password = document.getElementById("share-password")?.value?.trim() || undefined;
   const btn = modalEl?.querySelector('[data-action="create-share"]');
   if (btn) { btn.disabled = true; btn.textContent = "Creating…"; }
+  let link;
   try {
-    const link = await share.create("event", eventId, { expiresInHours: hours, label: ev?.title, writable, password });
-    try { await navigator.clipboard.writeText(link.url); } catch { /* re-render shows the url to copy manually */ }
-    await openShareModal(eventId); // refresh the list in place
+    link = await share.create("event", eventId, { expiresInHours: hours, label: ev?.title, writable, password });
   } catch (err) {
     if (btn) { btn.disabled = false; btn.textContent = "Create link"; }
     console.error(err);
@@ -909,7 +914,13 @@ async function createShare(eventId) {
     // and is shown as given; any other failure gets the app's line.
     if (err?.missingCapability) hubAlert("Couldn't create share link", { description: err.message });
     else hubAlert("Couldn’t create the share link — try again.");
+    return;
   }
+  // The link exists. A failed re-read must not report it as not created (a
+  // retry would make a second link), so it is handled apart from the create.
+  try { await navigator.clipboard.writeText(link.url); } catch { /* re-render shows the url to copy manually */ }
+  await openShareModal(eventId) // refresh the list in place
+    .catch(e => { console.error(e); closeModal(); hubAlert("The share link was created, but the list couldn’t be reloaded."); });
 }
 
 async function copyShare(id) {
@@ -923,11 +934,14 @@ async function revokeShare(id, eventId) {
   if (!await hubConfirm("Revoke this share link?", { description: "Anyone using it will immediately lose access.", confirmLabel: "Revoke" })) return;
   try {
     await share.revoke(id);
-    await openShareModal(eventId);
   } catch (err) {
     console.error(err);
     hubAlert("Couldn’t revoke the share link — try again.");
+    return;
   }
+  // The link is revoked: a failed re-read is not a failed revoke.
+  await openShareModal(eventId)
+    .catch(e => { console.error(e); closeModal(); hubAlert("The share link was revoked, but the list couldn’t be reloaded."); });
 }
 
 window.submitEvent = async function(existingId) {
